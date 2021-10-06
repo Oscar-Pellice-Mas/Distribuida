@@ -1,8 +1,6 @@
 package S2.Heavyweight;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -12,18 +10,20 @@ public class ProcessB {
     private static final int PORT_HWB = 6000;
     private static final int STARTING_PORT_LWB = 6001;
 
-    private int answersfromLightweigth;
-    private String token;
-    private Socket lightweights[] = new Socket[0];
-    private Socket heavyWeight = null;
-    private ServerSocket listener = null;
+    private static int answersfromLightweigth;
+    private static String token;
+    private static Socket lightweights[] = new Socket[0];
+    private static Socket heavyWeight = null;
+    private static ServerSocket listener = null;
 
-    private void generateSockets(){
+    private static void generateSockets(){
         try {
-
-            listener = new ServerSocket(PORT_HWB);
+            Socket clientSocket = new Socket("127.0.0.1", PORT_HWA);
+            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            //listener = new ServerSocket(PORT_HWB);
             lightweights = new Socket[NUM_LIGHTWEIGHTS];
-            heavyWeight = new Socket("127.0.0.1", PORT_HWA);
+            //heavyWeight = new Socket("127.0.0.1", PORT_HWA);
             for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
                 lightweights[i] = new Socket("127.0.0.1", STARTING_PORT_LWB + i);
             }
@@ -31,10 +31,11 @@ public class ProcessB {
             e.printStackTrace();
         }
     }
-    public void start() {
 
+    public static void main(String[] args) {
         //Creació dels socket cap el ligthweight
         generateSockets();
+
 
         try {
             while (true) {
@@ -55,16 +56,20 @@ public class ProcessB {
         }
     }
 
-    private void sendTokenToHeavyweight(OutputStream outputStream) {
+    private static void sendTokenToHeavyweight(PrintWriter out) {
+        out.write("TOKEN");
     }
 
-    private void listenHeavyweight(InputStream inputStream) {
+    private static void listenHeavyweight(BufferedReader in) throws IOException {
+        String msg = in.readLine();
+        if (msg.equalsIgnoreCase("TOKEN")) token = "TOKEN";
+        else System.out.println(msg);
     }
 
-    private void listenLightweight(InputStream inputStream) {
+    private static void listenLightweight(PrintWriter out) {
     }
 
-    private void sendActionToLightweight(OutputStream outputStream) {
+    private static void sendActionToLightweight(BufferedReader in) {
 
     }
 

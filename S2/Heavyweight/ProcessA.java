@@ -4,12 +4,33 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 public class ProcessA {
-    private static String token;
     private static final int NUM_LIGHTWEIGHTS = 3;
+    private static final int PORT_HWA = 5000;
+    private static final int PORT_HWB = 6000;
+    private static final int STARTING_PORT_LWA = 5001;
+
     private static int answersfromLightweigth;
+    private static String token;
+    private Socket lightweights[] = new Socket[0];
+    private Socket heavyWeight = null;
+    private ServerSocket listener = null;
+
+    private void generateSockets(){
+        try {
+            listener = new ServerSocket(PORT_HWA);
+            lightweights = new Socket[NUM_LIGHTWEIGHTS];
+            heavyWeight = new Socket("127.0.0.1", PORT_HWB);
+            for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
+                lightweights[i] = new Socket("127.0.0.1", STARTING_PORT_LWA + i);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void main(String[] args) {
         try {
