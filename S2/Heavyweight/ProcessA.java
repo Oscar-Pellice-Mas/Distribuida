@@ -15,15 +15,18 @@ public class ProcessA {
 
     private static int answersfromLightweigth;
     private static String token;
-    private Socket lightweights[] = new Socket[0];
-    private Socket heavyWeight = null;
-    private ServerSocket listener = null;
+    private static Socket lightweights[] = new Socket[0];
+    private static Socket heavyWeight = null;
 
-    private void generateSockets(){
+    private static PrintWriter out = null;
+    private static BufferedReader in = null;
+
+    private static void generateSockets(){
         try {
-            listener = new ServerSocket(PORT_HWA);
             lightweights = new Socket[NUM_LIGHTWEIGHTS];
             heavyWeight = new Socket("127.0.0.1", PORT_HWB);
+            PrintWriter out = new PrintWriter(heavyWeight.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(heavyWeight.getInputStream()));
             for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
                 lightweights[i] = new Socket("127.0.0.1", STARTING_PORT_LWA + i);
             }
@@ -34,9 +37,7 @@ public class ProcessA {
 
     public static void main(String[] args) {
         try {
-            Socket clientSocket = new Socket("127.0.0.1", 5000);
-            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            generateSockets();
             while(true){
                 while(token == null) listenHeavyweight(in);
                 for (int i=0; i<NUM_LIGHTWEIGHTS; i++)
