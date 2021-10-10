@@ -30,9 +30,10 @@ public class ProcessA {
 
     private static void CreateServer(){
         try {
-            serverSocket = new ServerSocket(PORT_HWB);
+            serverSocket = new ServerSocket(PORT_HWA);
             serverAccepter=serverSocket.accept();//establishes connection
-            //DataInputStream serverDataInputStream=new DataInputStream(serverAccepter.getInputStream());
+            in = new BufferedReader(new InputStreamReader(serverAccepter.getInputStream()));
+            System.out.println("Conecta");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -43,7 +44,6 @@ public class ProcessA {
             lightweights = new Socket[NUM_LIGHTWEIGHTS];
             heavyWeight = new Socket("127.0.0.1", PORT_HWB);
             out = new PrintWriter(heavyWeight.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(heavyWeight.getInputStream()));
             for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
                 lightweights[i] = new Socket("127.0.0.1", STARTING_PORT_LWA + i);
             }
@@ -52,14 +52,14 @@ public class ProcessA {
         }
     }
 
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+        token = null;
         try {
-            CreateServer();
-            System.out.println("Server B ready?");
-            scanner.nextInt();
             generateSockets();
-            scanner.nextInt();
+            System.out.println("Server B ready?");
+            CreateServer();
             while(true){
                 while(token == null) listenHeavyweight(in);
                 for (int i=0; i<NUM_LIGHTWEIGHTS; i++)
@@ -93,6 +93,7 @@ public class ProcessA {
 
     private static void listenHeavyweight(BufferedReader in) throws IOException {
         String msg = in.readLine();
+        
         if (msg.equalsIgnoreCase("TOKEN")){
             token = "TOKEN";
             System.out.println("Sóc el Process A i puc parlar.");

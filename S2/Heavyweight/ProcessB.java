@@ -15,10 +15,11 @@ public class ProcessB {
     static ServerSocket serverSocket= null;
     static Socket serverAccepter= null;
 
+
     private static int answersfromLightweigth;
     private static String token;
     private static Socket lightweights[] = new Socket[0];
-    private static Socket heavyWeight = null;
+    private static Socket heavyWeight_A = null;
 
     private static PrintWriter out = null;
     private static BufferedReader in = null;
@@ -29,7 +30,7 @@ public class ProcessB {
         try {
             serverSocket = new ServerSocket(PORT_HWB);
             serverAccepter=serverSocket.accept();//establishes connection
-            //DataInputStream serverDataInputStream=new DataInputStream(serverAccepter.getInputStream());
+            System.out.println("Conecta");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -38,9 +39,9 @@ public class ProcessB {
     private static void generateSockets(){
         try {
             lightweights = new Socket[NUM_LIGHTWEIGHTS];
-            heavyWeight = new Socket("127.0.0.1", PORT_HWA);
-            out = new PrintWriter(heavyWeight.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(heavyWeight.getInputStream()));
+            heavyWeight_A = new Socket("127.0.0.1", PORT_HWA);
+            out = new PrintWriter(heavyWeight_A.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(serverAccepter.getInputStream()));
             for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
                 lightweights[i] = new Socket("127.0.0.1", STARTING_PORT_LWB + i);
             }
@@ -51,13 +52,13 @@ public class ProcessB {
 
     public static void main(String[] args) {
         //Creació dels socket cap el ligthweight
+        token="TOKEN";
         Scanner scanner = new Scanner(System.in);
         try {
             CreateServer();
             System.out.println("Server A ready?");
             scanner.nextInt();
             generateSockets();
-            scanner.nextInt();
             while (true) {
                 while(token == null) listenHeavyweight(in);
                 for (int i=0; i<NUM_LIGHTWEIGHTS; i++)
@@ -65,7 +66,7 @@ public class ProcessB {
                 answersfromLightweigth=0;
                 while(answersfromLightweigth < NUM_LIGHTWEIGHTS)
                     listenLightweight(in);
-                token = null;
+
                 sendTokenToHeavyweight(out);
             }
         } catch(IOException e){
@@ -75,6 +76,7 @@ public class ProcessB {
 
     private static void sendTokenToHeavyweight(PrintWriter out) {
         out.write("TOKEN");
+        token = null;
     }
 
     private static void listenHeavyweight(BufferedReader in) throws IOException {
