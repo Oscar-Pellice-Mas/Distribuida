@@ -21,8 +21,13 @@ public class ProcessB {
     private static Socket lightweights[] = new Socket[0];
     private static Socket heavyWeight_A = null;
 
-    private static PrintWriter out = null;
-    private static BufferedReader in = null;
+    private static PrintWriter outS = null;
+    private static BufferedReader inS = null;
+    private static PrintWriter outHW = null;
+    private static BufferedReader inHW = null;
+    private static PrintWriter outLW[] = new PrintWriter[NUM_LIGHTWEIGHTS];
+    private static BufferedReader inLW[] = new BufferedReader[NUM_LIGHTWEIGHTS];
+
 
 
 
@@ -30,6 +35,8 @@ public class ProcessB {
         try {
             serverSocket = new ServerSocket(PORT_HWB);
             serverAccepter=serverSocket.accept();//establishes connection
+            inS = new BufferedReader(new InputStreamReader(serverAccepter.getInputStream()));
+            outS = new PrintWriter(serverAccepter.getOutputStream(), true);
             System.out.println("Conecta");
         } catch (IOException e) {
             e.printStackTrace();
@@ -40,8 +47,8 @@ public class ProcessB {
         try {
             lightweights = new Socket[NUM_LIGHTWEIGHTS];
             heavyWeight_A = new Socket("127.0.0.1", PORT_HWA);
-            out = new PrintWriter(heavyWeight_A.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(serverAccepter.getInputStream()));
+            inHW = new BufferedReader(new InputStreamReader(heavyWeight_A.getInputStream()));
+            outHW = new PrintWriter(heavyWeight_A.getOutputStream(), true);
             for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
                 lightweights[i] = new Socket("127.0.0.1", STARTING_PORT_LWB + i);
             }
@@ -60,14 +67,15 @@ public class ProcessB {
             scanner.nextInt();
             generateSockets();
             while (true) {
-                while(token == null) listenHeavyweight(in);
+                while(token == null) listenHeavyweight(inS);
                 for (int i=0; i<NUM_LIGHTWEIGHTS; i++)
-                    sendActionToLightweight(out);
+                    sendActionToLightweight(outLW[i]);
                 answersfromLightweigth=0;
-                while(answersfromLightweigth < NUM_LIGHTWEIGHTS)
-                    listenLightweight(in);
+                for (int i=0; answersfromLightweigth < NUM_LIGHTWEIGHTS; i++)
+                    listenLightweight(inLW[i]);
 
-                sendTokenToHeavyweight(out);
+                sendTokenToHeavyweight(outHW);
+                System.out.println("PROVO SI ARRIBO");
             }
         } catch(IOException e){
             e.printStackTrace();

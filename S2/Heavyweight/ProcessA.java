@@ -24,15 +24,19 @@ public class ProcessA {
     private static Socket lightweights[] = new Socket[0];
     private static Socket heavyWeight = null;
 
-    private static PrintWriter out = null;
-    private static BufferedReader in = null;
-
+    private static PrintWriter outS = null;
+    private static BufferedReader inS = null;
+    private static PrintWriter outHW = null;
+    private static BufferedReader inHW = null;
+    private static PrintWriter outLW[] = new PrintWriter[NUM_LIGHTWEIGHTS];
+    private static BufferedReader inLW[] = new BufferedReader[NUM_LIGHTWEIGHTS];
 
     private static void CreateServer(){
         try {
             serverSocket = new ServerSocket(PORT_HWA);
             serverAccepter=serverSocket.accept();//establishes connection
-            in = new BufferedReader(new InputStreamReader(serverAccepter.getInputStream()));
+            inS = new BufferedReader(new InputStreamReader(serverAccepter.getInputStream()));
+            outS = new PrintWriter(serverAccepter.getOutputStream(), true);
             System.out.println("Conecta");
         } catch (IOException e) {
             e.printStackTrace();
@@ -43,7 +47,8 @@ public class ProcessA {
         try {
             lightweights = new Socket[NUM_LIGHTWEIGHTS];
             heavyWeight = new Socket("127.0.0.1", PORT_HWB);
-            out = new PrintWriter(heavyWeight.getOutputStream(), true);
+            inHW = new BufferedReader(new InputStreamReader(heavyWeight.getInputStream()));
+            outHW = new PrintWriter(heavyWeight.getOutputStream(), true);
             for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
                 lightweights[i] = new Socket("127.0.0.1", STARTING_PORT_LWA + i);
             }
@@ -61,14 +66,14 @@ public class ProcessA {
             System.out.println("Server B ready?");
             CreateServer();
             while(true){
-                while(token == null) listenHeavyweight(in);
+                while(token == null) listenHeavyweight(inS);
                 for (int i=0; i<NUM_LIGHTWEIGHTS; i++)
-                    sendActionToLightweight(out);
+                    sendActionToLightweight(outLW[i]);
                 answersfromLightweigth=0;
-                while(answersfromLightweigth < NUM_LIGHTWEIGHTS)
-                    listenLightweight(in);
+                for (int i=0; answersfromLightweigth < NUM_LIGHTWEIGHTS; i++)
+                    listenLightweight(inLW[i]);
                 token = null;
-                sendTokenToHeavyweight(out);
+                sendTokenToHeavyweight(outHW);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -93,7 +98,7 @@ public class ProcessA {
 
     private static void listenHeavyweight(BufferedReader in) throws IOException {
         String msg = in.readLine();
-        
+
         if (msg.equalsIgnoreCase("TOKEN")){
             token = "TOKEN";
             System.out.println("Sóc el Process A i puc parlar.");
