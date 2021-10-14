@@ -37,7 +37,12 @@ public class ProcessA {
             serverAccepter=serverSocket.accept();//establishes connection
             inS = new BufferedReader(new InputStreamReader(serverAccepter.getInputStream()));
             outS = new PrintWriter(serverAccepter.getOutputStream(), true);
-            System.out.println("Conecta");
+            System.out.println("Conecta al HW");
+            for(int i =0; i<NUM_LIGHTWEIGHTS;i++){
+                lightweights[i] = serverSocket.accept();
+                outLW[i]= new PrintWriter(lightweights[i].getOutputStream(), true);
+                inLW[i] = new BufferedReader(new InputStreamReader(lightweights[i].getInputStream()));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -49,9 +54,6 @@ public class ProcessA {
             heavyWeight = new Socket("127.0.0.1", PORT_HWB);
             inHW = new BufferedReader(new InputStreamReader(heavyWeight.getInputStream()));
             outHW = new PrintWriter(heavyWeight.getOutputStream(), true);
-            for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
-                lightweights[i] = new Socket("127.0.0.1", STARTING_PORT_LWA + i);
-            }
         } catch (IOException e) {
             e.printStackTrace();
         }

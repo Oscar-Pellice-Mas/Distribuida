@@ -18,7 +18,7 @@ public class ProcessB {
 
     private static int answersfromLightweigth;
     private static String token;
-    private static Socket lightweights[] = new Socket[0];
+    private static Socket lightweights[] = new Socket[NUM_LIGHTWEIGHTS];
     private static Socket heavyWeight_A = null;
 
     private static PrintWriter outS = null;
@@ -37,7 +37,12 @@ public class ProcessB {
             serverAccepter=serverSocket.accept();//establishes connection
             inS = new BufferedReader(new InputStreamReader(serverAccepter.getInputStream()));
             outS = new PrintWriter(serverAccepter.getOutputStream(), true);
-            System.out.println("Conecta");
+            System.out.println("Conecta al HW");
+            for(int i =0; i<NUM_LIGHTWEIGHTS;i++){
+                lightweights[i] = serverSocket.accept();
+                outLW[i]= new PrintWriter(lightweights[i].getOutputStream(), true);
+                inLW[i] = new BufferedReader(new InputStreamReader(lightweights[i].getInputStream()));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -49,9 +54,6 @@ public class ProcessB {
             heavyWeight_A = new Socket("127.0.0.1", PORT_HWA);
             inHW = new BufferedReader(new InputStreamReader(heavyWeight_A.getInputStream()));
             outHW = new PrintWriter(heavyWeight_A.getOutputStream(), true);
-            for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
-                lightweights[i] = new Socket("127.0.0.1", STARTING_PORT_LWB + i);
-            }
         } catch (IOException e) {
             e.printStackTrace();
         }
