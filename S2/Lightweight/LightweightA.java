@@ -13,13 +13,14 @@ public class LightweightA {
     private static Socket socket;
     private static PrintWriter outHW;
     private static BufferedReader inHW;
-
+    static String myID;;
 
     private static void connectarHW(){
         try {
             socket = new Socket("127.0.0.1",PORT_HWB);
             inHW = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             outHW = new PrintWriter(socket.getOutputStream(), true);
+            myID = inHW.readLine();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -28,5 +29,33 @@ public class LightweightA {
 
     public static void main(String[] args) {
         connectarHW();
+
+        while (true){
+            waitHeavyWeight();
+            requestCS();
+            for (int i=0; i<10; i++){
+                System.out.println("Sóc el procés lightweight: "+ myID+"\n");
+                espera1Segon();
+            }
+            releaseCS();
+            notifyHeavyWeight();
+        }
+
+    }
+
+    private static void notifyHeavyWeight() {
+
+    }
+
+    private static void releaseCS() {
+    }
+
+    private static void espera1Segon() {
+    }
+
+    private static void requestCS() {
+    }
+
+    private static void waitHeavyWeight() {
     }
 }

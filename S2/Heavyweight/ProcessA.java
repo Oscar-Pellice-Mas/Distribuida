@@ -42,6 +42,7 @@ public class ProcessA {
                 lightweights[i] = serverSocket.accept();
                 outLW[i]= new PrintWriter(lightweights[i].getOutputStream(), true);
                 inLW[i] = new BufferedReader(new InputStreamReader(lightweights[i].getInputStream()));
+                outLW[i].println(Integer.toString(i));
             }
         } catch (IOException e) {
             e.printStackTrace();
