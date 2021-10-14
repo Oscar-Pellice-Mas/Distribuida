@@ -81,7 +81,7 @@ public class ProcessA {
     }
 
     private static void sendTokenToHeavyweight(PrintWriter out) {
-        out.write("TOKEN");
+        out.println("TOKEN");
     }
 
     private static void listenLightweight(BufferedReader in) throws IOException {

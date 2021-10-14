@@ -83,7 +83,7 @@ public class ProcessB {
     }
 
     private static void sendTokenToHeavyweight(PrintWriter out) {
-        out.write("TOKEN");
+        out.println("TOKEN");
         token = null;
     }
 

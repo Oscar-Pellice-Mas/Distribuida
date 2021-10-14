@@ -2,24 +2,71 @@ package S0;
 
 import java.net.*;
 import java.io.*;
+import java.util.ArrayList;
 
+class dedicatedServer extends Thread{
+    private PrintWriter out;
+    private BufferedReader in;
+
+
+    public dedicatedServer(BufferedReader in, PrintWriter out) {
+        this.out=out;
+        this.in=in;
+    }
+
+    @Override
+    public synchronized void start() {
+        while(true){
+            try {
+                String msg = in.readLine();
+                if (msg.equals("request")){
+                    while (true){
+                        synchronized (this){
+                            Servidor.token=false;
+                            out.println("Granted");
+                        }
+                    }
+                }else if (msg.equals("letGo")){
+                    synchronized (this){
+                        Servidor.token = true;
+                        out.println("GotIt");
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
 public class Servidor {
+    public static boolean token = true;
     private ServerSocket serverSocket;
     private Socket clientSocket;
     private PrintWriter out;
     private BufferedReader in;
 
+    private ArrayList<dedicatedServer> servers = new ArrayList<dedicatedServer>();
+    private int numServers=0;
+
     public void start(int port) throws IOException {
         serverSocket = new ServerSocket(port);
-        clientSocket = serverSocket.accept();
-        out = new PrintWriter(clientSocket.getOutputStream(), true);
-        in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        String greeting = in.readLine();
-        if ("hello server".equals(greeting)) {
-            out.println("hello client");
-        }
-        else {
-            System.out.println("unrecognised greeting");
+        System.out.println("Esperant connexions");
+        while (true){
+            clientSocket = serverSocket.accept();
+            out = new PrintWriter(clientSocket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            System.out.println("Esperem benvinguda");
+            String greeting = in.readLine();
+            System.out.println("Benvinguda: "+ greeting);
+            if ("hello server".equals(greeting)) {
+                out.println("hello client");
+            }
+            else {
+                System.out.println("unrecognised greeting");
+            }
+
+            servers.add(new dedicatedServer(in,out));
+            servers.get(numServers++).start();
         }
     }
 
@@ -34,43 +81,4 @@ public class Servidor {
         server.start(port);
     }
 
-    /*private ServerSocket serverSocket;
-
-    public void start(int port) {
-        serverSocket = new ServerSocket(port);
-        while (true)
-            new EchoClientHandler(serverSocket.accept()).start();
-    }
-
-    public void stop() {
-        serverSocket.close();
-    }
-
-    private static class EchoClientHandler extends Thread {
-        private Socket clientSocket;
-        private PrintWriter out;
-        private BufferedReader in;
-
-        public EchoClientHandler(Socket socket) {
-            this.clientSocket = socket;
-        }
-
-        public void run() {
-            out = new PrintWriter(clientSocket.getOutputStream(), true);
-            in = new BufferedReader(
-              new InputStreamReader(clientSocket.getInputStream()));
-
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                if (".".equals(inputLine)) {
-                    out.println("bye");
-                    break;
-                }
-                out.println(inputLine);
-            }
-
-            in.close();
-            out.close();
-            clientSocket.close();
-    }*/
 }

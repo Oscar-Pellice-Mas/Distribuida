@@ -19,7 +19,9 @@ public class Client extends Servidor{
 
     public String sendMessage(String msg) throws IOException {
         out.println(msg);
+        System.out.println("Esperem resposta");
         String resp = in.readLine();
+        System.out.println("Resposta: " + resp);
         return resp;
     }
 
@@ -42,7 +44,10 @@ public class Client extends Servidor{
         }
     }
     
-    public void startCommunication(){
-        out.println("hello client");
+    public void startCommunication() throws IOException {
+        sendMessage("request");
+        System.out.println("Tinc el token");
+        sendMessage("letGo");
+        System.out.println("Ja no");
     }
 }

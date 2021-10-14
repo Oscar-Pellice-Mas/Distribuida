@@ -9,6 +9,18 @@ public class Main {
     public static void main(String[] args) {
         try {
             serverT.config(123);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+class MainClient {
+    private static final Servidor serverT = new Servidor();
+    private static final Client serversN = new Client();
+
+    public static void main(String[] args) {
+        try {
             serversN.config(123);
         } catch (IOException e) {
             e.printStackTrace();
