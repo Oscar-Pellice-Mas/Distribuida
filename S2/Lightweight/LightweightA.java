@@ -1,5 +1,7 @@
 package S2.Lightweight;
 
+import S2.Utils.Lamport;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -29,18 +31,18 @@ public class LightweightA {
 
     public static void main(String[] args) {
         connectarHW();
-
+        connectarHW();
+        Lamport lamport = new Lamport(myID);
         while (true){
             waitHeavyWeight();
-            requestCS();
+            lamport.requestCS(inHW, outHW);
             for (int i=0; i<10; i++){
                 System.out.println("Sóc el procés lightweight: "+ myID+"\n");
                 espera1Segon();
             }
-            releaseCS();
+            lamport.releaseCS(outHW);
             notifyHeavyWeight();
         }
-
     }
 
     private static void notifyHeavyWeight() {

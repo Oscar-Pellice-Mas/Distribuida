@@ -1,10 +1,14 @@
 package S2.Lightweight;
 
+import S2.Utils.Lamport;
+import S2.Utils.LocalClock;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class LightweightB {
     private static final int PORT_HWA = 5000;
@@ -14,6 +18,7 @@ public class LightweightB {
     private static PrintWriter outHW;
     private static BufferedReader inHW;
     static String myID;
+
 
 
     private static void connectarHW(){
@@ -44,17 +49,19 @@ public class LightweightB {
 
     }
 
+
+    public static void requestCS() {
+
+
+    }
+    public static void releaseCS() {
+    }
+
     private static void notifyHeavyWeight() {
 
     }
 
-    private static void releaseCS() {
-    }
-
     private static void espera1Segon() {
-    }
-
-    private static void requestCS() {
     }
 
     private static void waitHeavyWeight() {
