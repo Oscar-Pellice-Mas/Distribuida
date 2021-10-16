@@ -21,7 +21,7 @@ public class LocalClock {
     }
 
     public int tick(){
-        return ++ticks;
+        return ticks++;
     }
 
     public int getTicks(){
@@ -31,7 +31,8 @@ public class LocalClock {
     public int getValue(int id){
         return value[id];
     }
-    public void recieveAction(){
 
+    public void recieveAction(int id, int time){
+        value[id] = Integer.max(value[id], time)+1;
     }
 }

@@ -2,6 +2,7 @@ package S2.Lightweight;
 
 import S2.Utils.Lamport;
 import S2.Utils.LocalClock;
+import S2.Utils.RicAndAgr;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -35,27 +36,21 @@ public class LightweightB {
 
     public static void main(String[] args) {
         connectarHW();
-
+        RicAndAgr ra = new RicAndAgr();
         while (true){
             waitHeavyWeight();
-            requestCS();
+            ra.requestCS();
             for (int i=0; i<10; i++){
                 System.out.println("Sóc el procés lightweight: "+ myID+"\n");
                 espera1Segon();
             }
-            releaseCS();
+            ra.releaseCS();
             notifyHeavyWeight();
         }
 
     }
 
 
-    public static void requestCS() {
-
-
-    }
-    public static void releaseCS() {
-    }
 
     private static void notifyHeavyWeight() {
 

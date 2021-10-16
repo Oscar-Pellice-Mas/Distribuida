@@ -49,13 +49,7 @@ public class LightweightA {
 
     }
 
-    private static void releaseCS() {
-    }
-
     private static void espera1Segon() {
-    }
-
-    private static void requestCS() {
     }
 
     private static void waitHeavyWeight() {
