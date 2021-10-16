@@ -12,8 +12,8 @@ public class RicAndAgr {
     private int myId= 0;
     private int numOk=0;
 
-    public RicAndAgr(int myId) {
-        this.myId = myId;
+    public RicAndAgr(String myId) {
+        this.myId = Integer.parseInt(myId);
         this.myts = Integer.MAX_VALUE;
         clock  = LamportClock.getLamportClock();
         this.cua =  new LinkedList<Integer>();

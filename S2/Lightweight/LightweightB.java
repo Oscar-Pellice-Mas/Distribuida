@@ -36,15 +36,15 @@ public class LightweightB {
 
     public static void main(String[] args) {
         connectarHW();
-        RicAndAgr ra = new RicAndAgr();
+        RicAndAgr ra = new RicAndAgr(myID);
         while (true){
             waitHeavyWeight();
-            ra.requestCS();
+            ra.requestCS(outHW);
             for (int i=0; i<10; i++){
                 System.out.println("Sóc el procés lightweight: "+ myID+"\n");
                 espera1Segon();
             }
-            ra.releaseCS();
+            ra.releaseCS(outHW);
             notifyHeavyWeight();
         }
 
