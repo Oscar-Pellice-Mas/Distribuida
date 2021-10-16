@@ -3,6 +3,7 @@ package S2.Heavyweight;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.LinkedList;
 import java.util.Scanner;
 
 public class ProcessB {
@@ -29,7 +30,7 @@ public class ProcessB {
     private static BufferedReader inLW[] = new BufferedReader[NUM_LIGHTWEIGHTS];
 
 
-
+    private static LinkedList<String> cuaLW = new LinkedList<String>();
 
     private static void CreateServer(){
         try {
@@ -73,6 +74,8 @@ public class ProcessB {
                 while(token == null) listenHeavyweight(inS);
                 for (int i=0; i<NUM_LIGHTWEIGHTS; i++)
                     sendActionToLightweight(outLW[i]);
+                //Netejem la cua
+                cuaLW.removeAll(cuaLW);
                 answersfromLightweigth=0;
                 for (int i=0; answersfromLightweigth < NUM_LIGHTWEIGHTS; i++)
                     listenLightweight(inLW[i]);
@@ -100,16 +103,22 @@ public class ProcessB {
     }
 
     private static void listenLightweight(BufferedReader in) throws IOException {
-        String msg = in.readLine();
+        String msg = in.readLine(); //estructura: <request/okay> <ID> <timestamp>
+
+        cuaLW.addFirst(msg);
+        answersfromLightweigth++;
+        /*
         if (msg.equalsIgnoreCase("TOKEN")){
             token = "TOKEN";
             answersfromLightweigth++;
         }
-        else System.out.println(msg);
+        else System.out.println(msg);*/
     }
 
     private static void sendActionToLightweight(PrintWriter out) {
-
+        for (int i=0; i < NUM_LIGHTWEIGHTS; i++){
+            out.println(cuaLW.get(i));
+        }
     }
 
 

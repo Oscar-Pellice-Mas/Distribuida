@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.LinkedList;
 import java.util.Scanner;
 
 public class ProcessA {
@@ -30,6 +31,8 @@ public class ProcessA {
     private static BufferedReader inHW = null;
     private static PrintWriter outLW[] = new PrintWriter[NUM_LIGHTWEIGHTS];
     private static BufferedReader inLW[] = new BufferedReader[NUM_LIGHTWEIGHTS];
+
+    private static LinkedList<String> cuaLW = new LinkedList<String>();
 
     private static void CreateServer(){
         try {
@@ -72,6 +75,8 @@ public class ProcessA {
                 while(token == null) listenHeavyweight(inS);
                 for (int i=0; i<NUM_LIGHTWEIGHTS; i++)
                     sendActionToLightweight(outLW[i]);
+                //Netejem la cua
+                cuaLW.removeAll(cuaLW);
                 answersfromLightweigth=0;
                 for (int i=0; answersfromLightweigth < NUM_LIGHTWEIGHTS; i++)
                     listenLightweight(inLW[i]);
@@ -88,24 +93,38 @@ public class ProcessA {
     }
 
     private static void listenLightweight(BufferedReader in) throws IOException {
-        String msg = in.readLine();
+        String msg = in.readLine(); //estructura: <request/release> <ID> <timestamp>
+        cuaLW.addFirst(msg);
+        answersfromLightweigth++;
+        //Tractament separat segons release o request. Ho deixo però probablement no ens fagi falta.
+        /*
+        String[] sections = msg.split("");
+        if (sections[0].equals("release")){
+            for (int i=0; i<NUM_LIGHTWEIGHTS; i++){
+                if (i!= Integer.parseInt(sections[1])){
+                    outLW[i].println(msg);
+                }
+            }
+        }else{
+
+        }
+        */
+    }
+
+    private static void sendActionToLightweight(PrintWriter out) {
+        for (int i=0; i < NUM_LIGHTWEIGHTS; i++){
+            out.println(cuaLW.get(i));
+        }
+    }
+
+    private static void listenHeavyweight(BufferedReader in) throws IOException {
+        String msg = in.readLine(); //estructura: <request/okay> <ID> <timestamp>
+
         if (msg.equalsIgnoreCase("TOKEN")){
             token = "TOKEN";
             answersfromLightweigth++;
         }
         else System.out.println(msg);
-    }
-
-    private static void sendActionToLightweight(PrintWriter out) {
-    }
-
-    private static void listenHeavyweight(BufferedReader in) throws IOException {
-        String msg = in.readLine();
-
-        if (msg.equalsIgnoreCase("TOKEN")){
-            token = "TOKEN";
-            System.out.println("Sóc el Process A i puc parlar.");
-        }else System.out.println(msg);
     }
 
 }
