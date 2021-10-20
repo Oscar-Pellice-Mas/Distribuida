@@ -10,8 +10,7 @@ import java.util.LinkedList;
 import java.util.Scanner;
 
 public class ProcessA {
-    private static final int NUM_LIGHTWEIGHTS = 0;
-    //private static final int NUM_LIGHTWEIGHTS = 3;
+    private static final int NUM_LIGHTWEIGHTS = 3;
     private static final int PORT_HWA = 5000;
     private static final int PORT_HWB = 6000;
     private static final int STARTING_PORT_LWA = 5001;
@@ -32,7 +31,7 @@ public class ProcessA {
     private static PrintWriter outLW[] = new PrintWriter[NUM_LIGHTWEIGHTS];
     private static BufferedReader inLW[] = new BufferedReader[NUM_LIGHTWEIGHTS];
 
-    private static LinkedList<String> cuaLW = new LinkedList<String>();
+    private static LinkedList<String> cuaLW = new LinkedList<>();
 
     private static void CreateServer(){
         try {
@@ -45,7 +44,7 @@ public class ProcessA {
                 lightweights[i] = serverSocket.accept();
                 outLW[i]= new PrintWriter(lightweights[i].getOutputStream(), true);
                 inLW[i] = new BufferedReader(new InputStreamReader(lightweights[i].getInputStream()));
-                outLW[i].println(Integer.toString(i));
+                outLW[i].println(i);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -76,7 +75,7 @@ public class ProcessA {
                 for (int i=0; i<NUM_LIGHTWEIGHTS; i++)
                     sendActionToLightweight(outLW[i]);
                 //Netejem la cua
-                cuaLW.removeAll(cuaLW);
+                cuaLW.clear();
                 answersfromLightweigth=0;
                 for (int i=0; answersfromLightweigth < NUM_LIGHTWEIGHTS; i++)
                     listenLightweight(inLW[i]);

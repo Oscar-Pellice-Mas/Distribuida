@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 public class LightweightB {
@@ -65,5 +66,32 @@ public class LightweightB {
     }
 
     private static void waitHeavyWeight() {
+    }
+
+    private static class Canal extends Thread {
+        private final int id;
+
+        private BufferedReader inS;
+        private PrintWriter outS;
+        public Canal(int id){
+            this.id = id;
+        }
+
+        @Override
+        public synchronized void start() {
+            super.start();
+            ServerSocket serverSocket;
+            Socket heavyWeight;
+            try { // Nomes fer lectura, escritura desde thread principal
+                serverSocket = new ServerSocket(PORT_HWB + Integer.parseInt(myID));
+                Socket serverAccepter = serverSocket.accept();//establishes connection
+                inS = new BufferedReader(new InputStreamReader(serverAccepter.getInputStream()));
+                outS = new PrintWriter(serverAccepter.getOutputStream(), true);
+                System.out.println("Conecta al lightweight " + id);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
     }
 }
