@@ -1,7 +1,5 @@
 package S2.Lightweight;
 
-import S2.Utils.Lamport;
-import S2.Utils.LocalClock;
 import S2.Utils.RicAndAgr;
 
 import java.io.BufferedReader;
@@ -9,10 +7,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
 
 public class LightweightB {
-    private static final int PORT_HWA = 5000;
+    private static final int PORT_HWB = 6000;
 
 
     private static Socket socket;
@@ -24,7 +21,7 @@ public class LightweightB {
 
     private static void connectarHW(){
         try {
-            socket = new Socket("127.0.0.1",PORT_HWA);
+            socket = new Socket("127.0.0.1",PORT_HWB);
             inHW = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             outHW = new PrintWriter(socket.getOutputStream(), true);
             myID = inHW.readLine();
@@ -57,6 +54,14 @@ public class LightweightB {
     }
 
     private static void espera1Segon() {
+        try
+        {
+            Thread.sleep(1000);
+        }
+        catch(InterruptedException ex)
+        {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static void waitHeavyWeight() {

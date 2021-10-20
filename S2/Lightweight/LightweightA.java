@@ -9,8 +9,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class LightweightA {
-    private static final int PORT_HWB = 6000;
-
+    private static final int PORT_HWA = 5000;
 
     private static Socket socket;
     private static PrintWriter outHW;
@@ -19,7 +18,7 @@ public class LightweightA {
 
     private static void connectarHW(){
         try {
-            socket = new Socket("127.0.0.1",PORT_HWB);
+            socket = new Socket("127.0.0.1",PORT_HWA);
             inHW = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             outHW = new PrintWriter(socket.getOutputStream(), true);
             myID = inHW.readLine();
@@ -30,7 +29,6 @@ public class LightweightA {
     }
 
     public static void main(String[] args) {
-        connectarHW();
         connectarHW();
         Lamport lamport = new Lamport(myID);
         while (true){
