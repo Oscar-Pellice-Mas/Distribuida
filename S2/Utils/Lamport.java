@@ -10,6 +10,7 @@ public class Lamport {
     private int myId;
     private static final int NUM_LIGHTWEIGHTS = 3;
 
+
     public Lamport(String myId) {
         this.myId = Integer.parseInt(myId);
         this.clock = LocalClock.getLocalClock();
@@ -21,14 +22,26 @@ public class Lamport {
 
 
     public void /*synchronized*/ requestCS(BufferedReader inHW, PrintWriter outHW) {
+
         clock.tick();
         cua.set(myId,clock.getTicks());
         sendMSG(outHW, "request " + myId + " " + cua.get(myId));
-        while (!okayCS(inHW)){
-            waitHere();
-        }
+        myWait(inHW);
     }
 
+    private void myWait(BufferedReader inHW){
+        boolean wait=true; //Gestiona la wait
+        boolean stay=true;
+        if (okayCS(inHW)){
+            stay = false;
+        }else{
+            while (wait){
+
+            }
+            wait = true;
+        }
+
+    }
     private void sendMSG(PrintWriter outHW, String request) {
         outHW.println(request+myId);
     }
@@ -64,7 +77,12 @@ public class Lamport {
             sendMSG(outHW, src + " ack " + myId + " " + clock.getValue(myId));
         }else if (sections[0].equals("release")) cua.set(src,Integer.MAX_VALUE);
         //TODO: Implement notify
-        notify();
+        notificar();
+    }
+
+    private void notificar(){
+        //Avisem per tornar a fer el myWait amb el okayCS, que ara pot ser true
+        this.wait = false;
     }
 
 }

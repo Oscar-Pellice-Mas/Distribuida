@@ -11,7 +11,8 @@ import java.net.Socket;
 
 public class LightweightA {
     private static final int PORT_HWA = 5000;
-
+    //Té un thread principal amb el main
+    //I un thread de lectura que activará el handlemsg
     private static Socket socket;
     private static PrintWriter outHW;
     private static BufferedReader inHW;
