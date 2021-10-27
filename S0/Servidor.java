@@ -3,15 +3,24 @@ package S0;
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import static S0.Servidor.globalValue;
 
 class dedicatedServer extends Thread{
     private PrintWriter out;
     private BufferedReader in;
-
+    protected  Socket serverAccepter= null;
 
     public dedicatedServer(BufferedReader in, PrintWriter out) {
         this.out=out;
         this.in=in;
+    }
+
+    public dedicatedServer(PrintWriter out, BufferedReader in, Socket serverAccepter) {
+        this.out = out;
+        this.in = in;
+        this.serverAccepter = serverAccepter;
     }
 
     @Override
@@ -19,17 +28,14 @@ class dedicatedServer extends Thread{
         while(true){
             try {
                 String msg = in.readLine();
-                if (msg.equals("request")){
-                    while (true){
-                        synchronized (this){
-                            Servidor.token=false;
-                            out.println("Granted");
-                        }
-                    }
-                }else if (msg.equals("letGo")){
+                String parts[] = msg.split(" ");
+                if (parts[0].equals("getValue")){
                     synchronized (this){
-                        Servidor.token = true;
-                        out.println("GotIt");
+                        out.println(globalValue);
+                    }
+                }else if (parts[0].equals("updateValue")){
+                    synchronized (this){
+                        globalValue=Integer.parseInt(parts[1]);
                     }
                 }
             } catch (IOException e) {
@@ -37,48 +43,65 @@ class dedicatedServer extends Thread{
             }
         }
     }
-}
-public class Servidor {
-    public static boolean token = true;
-    private ServerSocket serverSocket;
-    private Socket clientSocket;
-    private PrintWriter out;
-    private BufferedReader in;
 
-    private ArrayList<dedicatedServer> servers = new ArrayList<dedicatedServer>();
+    private void stopDedicatedServer() throws IOException {
+        in.close();
+        out.close();
+        this.serverAccepter.close();
+    }
+}
+
+public class Servidor extends GenericServer{
+    protected static boolean token = true;
+    protected static int globalValue;
     private int numServers=0;
 
+    private ArrayList<dedicatedServer> servers = new ArrayList<dedicatedServer>();
+    private HashMap<Integer,Integer> serverMap= new HashMap<>(); //Guardem la estructura del token ring
+
     public void start(int port) throws IOException {
-        serverSocket = new ServerSocket(port);
-        System.out.println("Esperant connexions");
         while (true){
-            clientSocket = serverSocket.accept();
-            out = new PrintWriter(clientSocket.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             System.out.println("Esperem benvinguda");
-            String greeting = in.readLine();
+            String greeting = inS.readLine();
             System.out.println("Benvinguda: "+ greeting);
             if ("hello server".equals(greeting)) {
-                out.println("hello client");
+                outS.println("hello client "+numServers);
             }
             else {
                 System.out.println("unrecognised greeting");
+                outS.close();
+                inS.close();
+                serverAccepter.close();
+                return;
             }
+            if (numServers!=0){
+                //Enllacem el nou servidor
+                //Treiem la connexió del anterior amb 0 i el possem al següent. El actual a 0
+                //TODO: Només funciona sense fallades
+                serverMap.put(numServers,0);
+                serverMap.put(numServers-1,numServers);
+                //Avisem el nou
+                outS.println(0);
+                //Avisem el anterior
+                //TODO: com fem que el anterior segueixi escoltant i diferencii entre nou valor i nova connexio? Trama amb prefix?
 
-            servers.add(new dedicatedServer(in,out));
+            }
+            servers.add(new dedicatedServer(outS,inS,serverAccepter));
             servers.get(numServers++).start();
         }
     }
 
     public void stop() throws IOException {
-        in.close();
-        out.close();
-        clientSocket.close();
+        /*
+        inS.close();
+        outS.close();
+        serverAccepter.close();
+        */
         serverSocket.close();
     }
-    public void config(int port) throws IOException {
-        Servidor server=new Servidor();
-        server.start(port);
+    public void config() throws IOException {
+        CreateServer(PORT_SERVER_T);
+        this.start(PORT_SERVER_T);
     }
 
 }

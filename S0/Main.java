@@ -8,7 +8,7 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            serverT.config(123);
+            serverT.config();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -21,7 +21,7 @@ class MainClient {
 
     public static void main(String[] args) {
         try {
-            serversN.config(123);
+            serversN.config();
         } catch (IOException e) {
             e.printStackTrace();
         }
