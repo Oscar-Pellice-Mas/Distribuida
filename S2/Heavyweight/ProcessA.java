@@ -12,6 +12,12 @@ import java.util.List;
 import java.util.Scanner;
 
 public class ProcessA {
+    public static ProcessA Instance = null;
+
+    public ProcessA (){
+        Instance = this;
+    }
+
     private static final int NUM_LIGHTWEIGHTS = 3;
     private static final int PORT_HWA = 5000;
     private static final int PORT_HWB = 6000;
@@ -41,19 +47,26 @@ public class ProcessA {
     private static void CreateServer(){
         try {
             // Connect to HW
+            System.out.print("Creating server socket...");
             serverSocket = new ServerSocket(PORT_HWA);
+            System.out.println("Done!");
             serverAccepter = serverSocket.accept(); //establishes connection
             inS = new BufferedReader(new InputStreamReader(serverAccepter.getInputStream()));
             outS = new PrintWriter(serverAccepter.getOutputStream(), true);
-            System.out.println("Conecta al HW");
+            System.out.println("Connection recieved");
 
             // Connect to all LW
+            System.out.println("Creating lightweight sockets...");
+            lightweights = new ArrayList<>();
             for(int i =0; i<NUM_LIGHTWEIGHTS;i++){
+                System.out.print("Waiting for lightweight "+ (i+1) + "...");
                 lightweights.add(serverSocket.accept());
                 outLW[i]= new PrintWriter(lightweights.get(i).getOutputStream(), true);
                 inLW[i] = new BufferedReader(new InputStreamReader(lightweights.get(i).getInputStream()));
-                outLW[i].println(i);
+                outLW[i].println((i+1));
+                System.out.println("Done!");
             }
+            System.out.println("Done!");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -62,10 +75,11 @@ public class ProcessA {
     private static void generateSockets(){
         try {
             // Connect to HW
-            lightweights = new ArrayList<>();
+            System.out.print("Creating connexion to heavyweight B...");
             heavyWeight = new Socket("127.0.0.1", PORT_HWB);
             inHW = new BufferedReader(new InputStreamReader(heavyWeight.getInputStream()));
             outHW = new PrintWriter(heavyWeight.getOutputStream(), true);
+            System.out.println("Done!");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -77,7 +91,9 @@ public class ProcessA {
         try {
             generateSockets();
             CreateServer();
+            System.out.println("Config done!");
             while(true){
+                System.out.println("Listening...");
                 while(token == null) listenHeavyweight(inS);
                 for (int i=0; i<NUM_LIGHTWEIGHTS; i++)
                     sendActionToLightweight(outLW[i]);
