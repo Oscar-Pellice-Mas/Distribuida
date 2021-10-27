@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class LightweightA {
+public class LightweightA_1 {
     private static final int PORT_HWA = 5000;
     private static final int NUM_LIGHTWEIGHTS = 3;
 
@@ -47,7 +47,7 @@ public class LightweightA {
         try {
             System.out.print("Creant server socket...");
             serverSocketList = new ArrayList<>();
-            for (int i = 0; i < NUM_LIGHTWEIGHTS-1; i++) {
+            for (int i = 0; i < NUM_LIGHTWEIGHTS-1; i++) { //Obrir threads
                 ServerSocket serverSocket = new ServerSocket(PORT_HWA + myID);
                 Socket auxiliar = serverSocket.accept();
                 serverSocketList.add(auxiliar);

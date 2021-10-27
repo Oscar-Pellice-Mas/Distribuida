@@ -24,18 +24,12 @@ public class Lamport {
         }
     }
 
-    public synchronized void requestCS(Socket socket) {
-        try{
-            clock.tick();
-            cua.set(myId,clock.getTicks());
-            BufferedReader inHW = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            PrintWriter outHW = new PrintWriter(socket.getOutputStream(), true);
-            sendMSG(outHW, "request " + myId + " " + cua.get(myId));
-            while (!okayCS()){
-                waitHere();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    public synchronized void requestCS(PrintWriter outHW) {
+        clock.tick();
+        cua.set(myId,clock.getTicks());
+        sendMSG(outHW, "request " + myId + " " + cua.get(myId));
+        while (!okayCS()){
+            waitHere();
         }
     }
 

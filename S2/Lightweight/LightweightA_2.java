@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class LightweightA {
+public class LightweightA_2 {
     private static final int PORT_HWA = 5000;
     private static final int NUM_LIGHTWEIGHTS = 3;
 

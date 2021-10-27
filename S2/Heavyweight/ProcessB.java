@@ -34,17 +34,21 @@ public class ProcessB {
 
     private static void CreateServer(){
         try {
+            System.out.print("Create server socket...");
             serverSocket = new ServerSocket(PORT_HWB);
+            System.out.println("Done!");
+            System.out.print("Waiting process A...");
             serverAccepter=serverSocket.accept();//establishes connection
             inS = new BufferedReader(new InputStreamReader(serverAccepter.getInputStream()));
             outS = new PrintWriter(serverAccepter.getOutputStream(), true);
-            System.out.println("Conecta al HW");
+            System.out.println("Done!");
+            /*lightweights = new Socket[NUM_LIGHTWEIGHTS];
             for(int i =0; i<NUM_LIGHTWEIGHTS;i++){
                 lightweights[i] = serverSocket.accept();
                 outLW[i]= new PrintWriter(lightweights[i].getOutputStream(), true);
                 inLW[i] = new BufferedReader(new InputStreamReader(lightweights[i].getInputStream()));
                 outLW[i].println(Integer.toString(i));
-            }
+            }*/
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -52,10 +56,11 @@ public class ProcessB {
 
     private static void generateSockets(){
         try {
-            lightweights = new Socket[NUM_LIGHTWEIGHTS];
+            System.out.print("Creating connexion to heavyweight A...");
             heavyWeight_A = new Socket("127.0.0.1", PORT_HWA);
             inHW = new BufferedReader(new InputStreamReader(heavyWeight_A.getInputStream()));
             outHW = new PrintWriter(heavyWeight_A.getOutputStream(), true);
+            System.out.println("Done!");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -67,23 +72,25 @@ public class ProcessB {
         Scanner scanner = new Scanner(System.in);
         try {
             CreateServer();
-            System.out.println("Server A ready?");
-            scanner.nextInt();
+            System.out.println("- Server A ready? (press any button to continue)");
+            scanner.next();
             generateSockets();
             while (true) {
+                System.out.println("Waiting to start... (Press to coninue)");
+                scanner.next();
                 while(token == null) listenHeavyweight(inS);
-                for (int i=0; i<NUM_LIGHTWEIGHTS; i++)
+                /*for (int i=0; i<NUM_LIGHTWEIGHTS; i++)
                     sendActionToLightweight(outLW[i]);
                 //Netejem la cua
                 cuaLW.removeAll(cuaLW);
                 answersfromLightweigth=0;
                 for (int i=0; answersfromLightweigth < NUM_LIGHTWEIGHTS; i++)
-                    listenLightweight(inLW[i]);
-
+                    listenLightweight(inLW[i]);*/
+                Thread.sleep(1000);
                 sendTokenToHeavyweight(outHW);
-                System.out.println("PROVO SI ARRIBO");
+                System.out.println("Token enviat");
             }
-        } catch(IOException e){
+        } catch(IOException | InterruptedException e){
             e.printStackTrace();
         }
     }
