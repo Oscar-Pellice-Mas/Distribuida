@@ -49,6 +49,19 @@ class dedicatedServer extends Thread{
         out.close();
         this.serverAccepter.close();
     }
+    public void sendMsg(String msg){
+        out.println(msg);
+    }
+
+    public String getMsg(){
+        try {
+            return in.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }
 
 public class Servidor extends GenericServer{
@@ -83,8 +96,8 @@ public class Servidor extends GenericServer{
                 //Avisem el nou
                 outS.println(0);
                 //Avisem el anterior
-                //TODO: com fem que el anterior segueixi escoltant i diferencii entre nou valor i nova connexio? Trama amb prefix?
-
+                //Per fer que el anterior segueixi escoltant i diferencii entre nou valor i nova connexio: Trama amb prefix.
+                servers.get(servers.size()).sendMsg("Reconnect " + numServers);
             }
             servers.add(new dedicatedServer(outS,inS,serverAccepter));
             servers.get(numServers++).start();
