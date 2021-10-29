@@ -29,11 +29,11 @@ class dedicatedServer extends Thread{
             try {
                 String msg = in.readLine();
                 String parts[] = msg.split(" ");
-                if (parts[0].equals("getValue")){
+                if (parts[0].equals("REQUEST")){
                     synchronized (this){
                         out.println(globalValue);
                     }
-                }else if (parts[0].equals("updateValue")){
+                }else if (parts[0].equals("UPDATE")){
                     synchronized (this){
                         globalValue=Integer.parseInt(parts[1]);
                     }
@@ -104,7 +104,7 @@ public class Servidor extends GenericServer{
         }
     }
 
-    public void stop() throws IOException {
+    public void stopServer() throws IOException {
         /*
         inS.close();
         outS.close();

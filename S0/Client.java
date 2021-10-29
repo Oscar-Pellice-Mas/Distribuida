@@ -16,11 +16,21 @@ class ClientRingConnector extends Thread{
     private PrintWriter out[];
     private BufferedReader in[];
     private String msg;
+    private Client cl;
+
     public ClientRingConnector(Socket clientSocket[], PrintWriter out[], BufferedReader in[]) {
         this.clientSocket = clientSocket;
         this.out = out;
         this.in = in;
     }
+
+    public ClientRingConnector(Socket[] clientSocket, PrintWriter[] out, BufferedReader[] in, Client cl) {
+        this.clientSocket = clientSocket;
+        this.out = out;
+        this.in = in;
+        this.cl = cl;
+    }
+
     @Override
     public synchronized void start() {
         while(true){
@@ -32,37 +42,39 @@ class ClientRingConnector extends Thread{
             }
             //Mirem que no sigui un notify
             if (msg != null){
-                if (msg.split(" ")[0].equals("Reconnect")){
-                    //Reconnectem al següent
-                    try {
-                        clientSocket[SERVER_SEG].close();
-                        out[SERVER_SEG].close();
-                        in[SERVER_SEG].close();
-                        startConnection(Client.PORT+Integer.parseInt(msg.split(" ")[1]),SERVER_SEG);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }else{
-                    //Avisem al thread 3 que hi ha missatge
-                    Client.missatgeNouServerT(msg);
+                if (msg.split(" ")[0].equals("TOKEN")){
+                    //Avisem al thread 3
+                    cl.tenimToken(Integer.parseInt(msg.split(" ")[0]));
                 }
             }
         }
     }
 
-    private void startConnection(int port, int SoA) throws IOException {
+    public void sendToken(){
+        out[SERVER_SEG].println("TOKEN");
+    }
+    public void startConnection(int port, int SoA) throws IOException {
+        clientSocket[SERVER_SEG].close();
+        out[SERVER_SEG].close();
+        in[SERVER_SEG].close();
         clientSocket[SoA] = new Socket(GenericServer.LOCALHOST, port);
         out[SoA] = new PrintWriter(clientSocket[SoA].getOutputStream(), true);
         in[SoA] = new BufferedReader(new InputStreamReader(clientSocket[SoA].getInputStream()));
     }
 
+
+
 }
 class ClientStructureConnector extends Thread{
-    //TODO: Implementar el structureConnector
+    private static final int SERVER_SEG= 0;
+    private static final int SERVER_ANT= 1;
     //Server T
     private Socket clientSocket;
     private PrintWriter out;
     private BufferedReader in;
+    private ClientRingConnector crc; //Referència al crc d'aquest servidor per canviar la seva connexió.
+    private Client cl;
+    private String msg;
 
     public ClientStructureConnector(Socket clientSocket, PrintWriter out, BufferedReader in) {
         this.clientSocket = clientSocket;
@@ -70,9 +82,39 @@ class ClientStructureConnector extends Thread{
         this.in = in;
     }
 
+    public ClientStructureConnector(Socket clientSocket, PrintWriter out, BufferedReader in, ClientRingConnector crc, Client cl) {
+        this.clientSocket = clientSocket;
+        this.out = out;
+        this.in = in;
+        this.crc = crc;
+        this.cl = cl;
+    }
+
     @Override
     public synchronized void start() {
-        super.start();
+        while(true){
+            msg=null;
+            try {
+                msg = in.readLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            //Mirem que no sigui un notify
+            if (msg != null){
+                if (msg.split(" ")[0].equals("Reconnect")){
+                    //Reconnectem al següent
+                    try {
+                        //Avisem de connectarse
+                        crc.startConnection(Client.PORT+Integer.parseInt(msg.split(" ")[1]), SERVER_SEG);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }else{
+                    //Avisem al thread 3 que hi ha missatge
+                    cl.missatgeNouServerT(msg);
+                }
+            }
+        }
     }
 }
 public class Client extends GenericServer{
@@ -81,14 +123,19 @@ public class Client extends GenericServer{
 
     private static final int SERVER_T= 0;
     private static final int SERVER_N= 1;
+    private static String myMSG;
 
     //[Server T,Server N]
     private Socket clientSocket[];
     private PrintWriter out[];
     private BufferedReader in[];
+    //Elements de la comunicació
+    private boolean token;
+    private int myToken;
 
-    public static void missatgeNouServerT(String msg) {
-        //TODO: Implementar que quan arribi msg del ringConnector de valor ho gestionem
+    public void missatgeNouServerT(String msg) {
+        myMSG = msg;
+        notify();
     }
 
 
@@ -112,7 +159,7 @@ public class Client extends GenericServer{
         clientSocket[ToN].close();
     }
 
-    public void config() throws IOException {
+    public void config() throws IOException, InterruptedException {
         //Creem el server
         CreateServer(PORT);
         //Fem thread per el server N
@@ -127,14 +174,15 @@ public class Client extends GenericServer{
                 int position = Integer.parseInt(in[SERVER_T].readLine());
                 startConnection(LOCALHOST,PORT+position,SERVER_N);
             }
-            //TODO: tres threads: un controla la actualització de les connexions, un controla la connexió amb l'anterior i el posterior, un controla getValue i updateCurrentValue
+            //Tres threads: un controla la actualització de les connexions, un controla la connexió amb l'anterior i el posterior, un controla getValue i updateCurrentValue
             //Thread 1
             ClientRingConnector clientRing = new ClientRingConnector(new Socket[]{clientSocket[SERVER_N], super.serverAccepter},
                     new PrintWriter[]{out[SERVER_N], super.outS},
-                    new BufferedReader[]{in[SERVER_N], super.inS});
+                    new BufferedReader[]{in[SERVER_N], super.inS},
+                    this);
             clientRing.start();
             //Thread 2
-            ClientStructureConnector clientStruct = new ClientStructureConnector(clientSocket[SERVER_T],out[SERVER_T],in[SERVER_T]);
+            ClientStructureConnector clientStruct = new ClientStructureConnector(clientSocket[SERVER_T],out[SERVER_T],in[SERVER_T],clientRing,this);
             clientStruct.start();
             //Thread 3
             this.startCommunication();
@@ -149,31 +197,49 @@ public class Client extends GenericServer{
     private void ringComm() throws IOException{
 
     }
-    private void startCommunication() throws IOException {
+    private void startCommunication() throws IOException, InterruptedException {
 
         for (int i=0; i<10; i++){
-            /*
             //...
-            int valor = getCurrentValue();
-            //...
-            updateCurrentValue(valor+1);
-            //...
-            try {
-                sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            //int valor = getCurrentValue();
+            wait(); //Esperem a tenir el token
+            int value = getCurrentValue();
+            if (myToken==value){
+                myToken=value+1;
+                updateCurrentValue(myToken);
+
+                /*
+                //...
+                updateCurrentValue(valor+1);
+                //...
+                try {
+                    sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                //...
+                */
             }
-            //...
-            */
         }
     }
 
     private int getCurrentValue() {
-        int value =1;
-        System.out.println("WIP");
-        return value;
+        try {
+            out[SERVER_T].println("REQUEST");
+            wait();//Esperem la resposta que arribarà de altre Thread
+            return Integer.parseInt(myMSG);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
     private void updateCurrentValue(int value) {
-        System.out.println("WIP");
+        out[SERVER_T].println("UPDATE "+value);
+    }
+
+    public void tenimToken(int value){
+        this.token = true;
+        this.myToken=value;
+        notify();
     }
 }

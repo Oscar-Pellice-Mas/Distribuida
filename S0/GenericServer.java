@@ -7,7 +7,7 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class GenericServer {
+public class GenericServer extends Thread{
     protected static final int PORT_SERVER_T= 6000;
     protected static final String LOCALHOST= "127.0.0.1";
 
