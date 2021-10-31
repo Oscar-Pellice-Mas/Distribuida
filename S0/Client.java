@@ -62,10 +62,9 @@ class ClientRingConnector extends Thread{
                     }
                 }
             } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
+                System.out.println("Error en la lectura. Provarem de nou.");
             }
-            //FIXME: se está quedando aquí todo el rato
-            System.out.println("A");
+            //System.out.println("A");
             //Mirem que no sigui un notify
             if (msg != null){
                 if (msg.split(" ")[0].equals("TOKEN")){
