@@ -5,6 +5,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static S0.GenericServer.ANSI_YELLOW;
 import static S0.Servidor.globalValue;
 
 class dedicatedServer extends Thread{
@@ -24,10 +25,17 @@ class dedicatedServer extends Thread{
     }
 
     @Override
-    public synchronized void start() {
+    public void run() {
+        String msg = "";
         while(true){
             try {
-                String msg = in.readLine();
+                try{
+                   msg = in.readLine();
+                }catch(SocketException e){
+                    System.err.println("El client ha mort. Aquest servidor cessarà de funcionar");
+                    break;
+                }
+
                 String parts[] = msg.split(" ");
                 if (parts[0].equals("REQUEST")){
                     synchronized (this){
@@ -37,6 +45,7 @@ class dedicatedServer extends Thread{
                     synchronized (this){
                         globalValue=Integer.parseInt(parts[1]);
                     }
+                    System.out.println(ANSI_YELLOW + " Valor incrementat! Valor actual: " + globalValue);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -73,20 +82,23 @@ public class Servidor extends GenericServer{
     private HashMap<Integer,Integer> serverMap= new HashMap<>(); //Guardem la estructura del token ring
 
     public void start(int port) throws IOException {
+
         while (true){
-            System.out.println("Esperem benvinguda");
+            System.out.println(ANSI_GREEN+"Esperem Client");
+            waitForClient();
+            System.out.println(ANSI_GREEN+"Esperem benvinguda");
             String greeting = inS.readLine();
-            System.out.println("Benvinguda: "+ greeting);
+            System.out.println(ANSI_GREEN+"Benvinguda: "+ greeting);
             if ("hello server".equals(greeting)) {
                 outS.println("hello client "+numServers);
-            }
-            else {
-                System.out.println("unrecognised greeting");
+            } else {
+                System.err.println("unrecognised greeting");
                 outS.close();
                 inS.close();
                 serverAccepter.close();
                 return;
             }
+
             if (numServers!=0){
                 //Enllacem el nou servidor
                 //Treiem la connexió del anterior amb 0 i el possem al següent. El actual a 0
@@ -94,13 +106,18 @@ public class Servidor extends GenericServer{
                 serverMap.put(numServers,0);
                 serverMap.put(numServers-1,numServers);
                 //Avisem el nou
-                outS.println(0);
+                //outS.println("Reconnect "+0);
+                outS.println("0");
                 //Avisem el anterior
                 //Per fer que el anterior segueixi escoltant i diferencii entre nou valor i nova connexio: Trama amb prefix.
-                servers.get(servers.size()).sendMsg("Reconnect " + numServers);
+                servers.get(servers.size()-1).sendMsg("Reconnect " + numServers);
+            }else{
+                System.out.println(ANSI_CYAN+"Token per al server 0");
             }
             servers.add(new dedicatedServer(outS,inS,serverAccepter));
-            servers.get(numServers++).start();
+            servers.get(servers.size()-1).start();
+            numServers++;
+            System.out.println(ANSI_BLUE+"Num de Servers: "+numServers);
         }
     }
 
