@@ -1,5 +1,7 @@
 package S2.Lightweight;
 
+import S2.Heavyweight.ProcessA;
+import S2.Utils.GenericServer;
 import S2.Utils.Lamport;
 
 import java.io.BufferedReader;
@@ -12,24 +14,33 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class LightweightA {
-    private static final int PORT_HWA = 5000;
-    private static final int NUM_LIGHTWEIGHTS = 3;
+public class LightweightA extends GenericServer {
+    private LightweightA instance;
+    private final int PORT_HWA = 5000;
+    private final int NUM_LIGHTWEIGHTS = 3;
 
-    private static Lamport lamport;
-    private static int myID;
+    private Lamport lamport;
+    private int myID;
     // Heavyweight
-    private static Socket socketHW;
-    private static PrintWriter outHW;
-    private static BufferedReader inHW;
+    private  Socket socketHW;
+    private  PrintWriter outHW;
+    private  BufferedReader inHW;
 
     // Lightweights
-    private static List<Canal> serverCanalList;
-    private static List<Socket> serverSocketList;
+    private  List<Canal> serverCanalList; //Canals per escoltar
+    private  List<Socket> socketList; //Sockets de sortida
+    private  List<PrintWriter> outLWList; //outLW de sortida
+    private  List<BufferedReader> inLWLIST; //inLW de sortida
+
 
     // INICIALITZACIÓ
 
-    private static void connectarHW(){
+
+    public LightweightA() {
+        this.instance = this;
+    }
+
+    private  void connectarHW(){
         try {
             System.out.print("Creant socket a heavyweight...");
             socketHW = new Socket("127.0.0.1",PORT_HWA);
@@ -43,37 +54,77 @@ public class LightweightA {
         }
     }
 
-    private static void crearSockets() {
-        try {
-            System.out.print("Creant server socket...");
-            serverSocketList = new ArrayList<>();
-            for (int i = 0; i < NUM_LIGHTWEIGHTS-1; i++) {
-                ServerSocket serverSocket = new ServerSocket(PORT_HWA + myID);
-                Socket auxiliar = serverSocket.accept();
-                serverSocketList.add(auxiliar);
+    private void ConnectLightweights(){
+        Scanner scanner = new Scanner(System.in);
+        System.out.println(ANSI_GREEN+"Waiting other lightweights... (Press ENTER to continue)");
+        scanner.next();
+        for (int i = 0; i < NUM_LIGHTWEIGHTS-1; i++) {
+            try{
+                Socket aux = new Socket(LOCALHOST,STARTING_PORT_LWA+i);
+                socketList.add(aux);
+                inLWLIST.add( new BufferedReader(new InputStreamReader(aux.getInputStream())));
+                outLWList.add(  new PrintWriter(aux.getOutputStream(), true));
+                outLWList.get(outLWList.size()-1).println(myID);
+            }catch (IOException e){
+                try {
+                    sleep(3000);
+                    i--;
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
             }
-            System.out.println("Done!");
-
-            System.out.println("Waiting other lightweights... (Press to continue)");
-            Scanner scanner = new Scanner(System.in);
-            scanner.next();
-            System.out.print("Creant canals lightweight...");
-            serverCanalList = new ArrayList<>();
-            for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
-                if (i == myID) continue;
-                Canal aux = new Canal(i);
-                aux.start();
-                serverCanalList.add(aux);
-            }
-            System.out.println("Done!");
-        } catch (IOException e) {
-            e.printStackTrace();
         }
+        System.out.println(ANSI_YELLOW+"Done!");
+
+    }
+    private  void crearSockets() throws InterruptedException {
+        //TODO: Usar excepciones para conectarnos. Intentamos conectarnos con el socket, si no podemos dará exception y hacemos accept
+        socketList = new ArrayList<>();
+        serverCanalList = new ArrayList<>();
+
+        System.out.print(ANSI_GREEN+"Creant server socket...");
+        CreateServer(PORT_HWA+myID);
+        System.out.println(ANSI_YELLOW+"Done!");
+
+        System.out.print(ANSI_GREEN+"Tirant thread per escoltar LW...");
+        //Thread anònim per rebre les connexions
+        new Thread(
+                new Runnable() {
+                    public void run() {
+
+                        for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) serverCanalList.add(new Canal());
+                        for (int i = 0; i < NUM_LIGHTWEIGHTS; i++){
+                            waitForClient();
+                            // Rebre quin server es i guardar al seu lloc
+                            try {
+                                //Rebem la id
+                                int id = Integer.parseInt(inS.readLine());
+                                //El guardem al lloc que li pertoca a la llista
+                                serverCanalList.set(id, new Canal(id, serverAccepter ,inS, outS));
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        System.out.println(ANSI_CYAN+"S'han connectat tots els LW!");
+                        instance.notify();
+                    }
+                }
+        ).start();
+
+        //Anem intenant connectar-nos de mentres
+        ConnectLightweights();
+        wait(); //TODO: No sé si el connect lightweights acabará abans que el thread o no. S'ha de mirar.
+        System.out.print(ANSI_GREEN+"Corrent Threads de canals lightweight...");
+        for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
+            if (i == myID) continue;
+            serverCanalList.get(i).start();
+        }
+        System.out.println(ANSI_YELLOW+"Done!");
     }
 
     // EXECUCIO
 
-    public static void main(String[] args) {
+    public void mainFunction(String[] args) throws InterruptedException {
         connectarHW();
         crearSockets();
         lamport = new Lamport(myID);
@@ -91,11 +142,11 @@ public class LightweightA {
         }
     }
 
-    private static void notifyHeavyWeight() {
+    private void notifyHeavyWeight() {
         outHW.println("TOKEN");
     }
 
-    private static void espera1Segon() {
+    private void espera1Segon() {
         try
         {
             Thread.sleep(1000);
@@ -106,7 +157,7 @@ public class LightweightA {
         }
     }
 
-    private static void waitHeavyWeight() {
+    private void waitHeavyWeight() {
         String msg;
         try {
             msg = inHW.readLine();
@@ -118,25 +169,27 @@ public class LightweightA {
         }
     }
 
-    private static class Canal extends Thread {
-        private final int id;
+    private class Canal extends Thread {
+        private int id=0;
 
+        private Socket serverAccepter;
         private BufferedReader inS;
         private PrintWriter outS;
-        public Canal(int id){
+        public Canal(int id, Socket serverAccepter, BufferedReader inS, PrintWriter outS){
             this.id = id;
+            this.inS = inS;
+            this.outS = outS;
+            this.serverAccepter=serverAccepter;
+        }
+
+        public Canal() {
+
         }
 
         @Override
         public synchronized void start() {
-            super.start();
             ServerSocket serverSocket;
             try { // Nomes fer lectura, escritura desde thread principal
-                serverSocket = new ServerSocket(PORT_HWA + myID + 1);
-                Socket serverAccepter = serverSocket.accept();//establishes connection
-                inS = new BufferedReader(new InputStreamReader(serverAccepter.getInputStream()));
-                outS = new PrintWriter(serverAccepter.getOutputStream(), true);
-                System.out.println("Conecta al lightweight " + id);
                 while (true){
                     String command = inS.readLine();
                     lamport.handleMSG(outS, command, id);
@@ -144,6 +197,16 @@ public class LightweightA {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+}
+class MainHWA{
+    public static void main(String[] args) {
+        LightweightA LWA = new LightweightA();
+        try {
+            LWA.mainFunction(args);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }
