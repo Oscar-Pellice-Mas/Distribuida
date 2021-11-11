@@ -8,9 +8,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class GenericServer extends Thread{
-    protected static final int PORT_HWA= 6000;
-    protected static final int PORT_HWB = 6000;
-    protected static final int STARTING_PORT_LWA = 5001;
+    protected static final int PORT_HWA= 8001;
+    protected static final int PORT_HWB = 8000;
+    protected static final int STARTING_PORT_LWA = 8050;
+    private static final int STARTING_PORT_LWB = 8100;
     protected static final String LOCALHOST= "127.0.0.1";
     /** CODIS DE COLORS **/
 

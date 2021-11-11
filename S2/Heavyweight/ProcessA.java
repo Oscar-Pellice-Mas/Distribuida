@@ -23,13 +23,10 @@ public class ProcessA extends GenericServer {
     private static final int NUM_LIGHTWEIGHTS = 3;
 
 
-    static ServerSocket serverSocket= null;
-    static Socket serverAccepter= null;
-
     private int answersfromLightweigth;
     private String token;
 
-    private List<Socket> lightweights;
+    private ArrayList<Socket> lightweights;
     private Socket heavyWeight = null;
 
         // Server socket - inS i outS ve del pare
@@ -44,40 +41,57 @@ public class ProcessA extends GenericServer {
     private LinkedList<String> cuaLW = new LinkedList<>();
 
     private void CreateServer(){
-        try {
-            // Connect to HW
-            System.out.print(ANSI_GREEN+"Creating server socket...");
-            CreateServer(PORT_HWA);
-            System.out.println(ANSI_YELLOW+"Done!");
-            waitForClient();
-            System.out.println(ANSI_YELLOW+"Connection recieved");
+        // Connect to HW
+        System.out.print(ANSI_GREEN+"Creating server socket...");
+        super.CreateServer(PORT_HWA);
+        System.out.println(ANSI_YELLOW+"Done!");
+        new Thread(
+                new Runnable() {
+                    public void run() {
+                        try {
+                            System.out.print(ANSI_GREEN+"Waiting process B...");
+                            waitForClient();
+                            System.out.println(ANSI_YELLOW+"Process B connected to server!");
 
-            // Connect to all LW
-            System.out.println(ANSI_GREEN+"Creating lightweight sockets...");
-            lightweights = new ArrayList<>();
-            for(int i =0; i<NUM_LIGHTWEIGHTS;i++){
-                System.out.print(ANSI_GREEN+"Waiting for lightweight "+ (i+1) + "...");
-                lightweights.add(serverSocket.accept());
-                outLW[i]= new PrintWriter(lightweights.get(i).getOutputStream(), true);
-                inLW[i] = new BufferedReader(new InputStreamReader(lightweights.get(i).getInputStream()));
-                outLW[i].println((i+1));
-                System.out.println(ANSI_YELLOW+"Done!");
-            }
-            System.out.println(ANSI_YELLOW+"Done!");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+                            System.out.println(ANSI_GREEN+"Creating lightweight sockets...");
+                            lightweights = new ArrayList<Socket>();
+                            for(int i =0; i<NUM_LIGHTWEIGHTS;i++){
+                                System.out.println(ANSI_GREEN+"Waiting for lightweight "+ (i+1) + "...");
+                                lightweights.add(serverSocket.accept());
+                                outLW[i]= new PrintWriter(lightweights.get(i).getOutputStream(), true);
+                                inLW[i] = new BufferedReader(new InputStreamReader(lightweights.get(i).getInputStream()));
+                                outLW[i].println((i+1));
+                                System.out.println(ANSI_YELLOW+"lightweight "+(i+1)+" connected to server!");
+                            }
+                            System.out.println(ANSI_YELLOW+"LWA connected!");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+        ).start();
+
     }
 
-    private void generateSockets(){
+    private void generateSockets() {
+        boolean connectionEstablished = false;
+        // Connect to HW
         try {
-            // Connect to HW
-            System.out.print(ANSI_GREEN+"Creating connexion to heavyweight B...");
-            heavyWeight = new Socket("127.0.0.1", PORT_HWB);
+            System.out.println(ANSI_GREEN + "Creating connexion to heavyweight B...");
+            while (!connectionEstablished) {
+                try {
+                    heavyWeight = new Socket("127.0.0.1", PORT_HWB);
+                    connectionEstablished = true;
+                } catch (IOException e) {
+                    System.out.println(ANSI_GREEN + "...");
+                    sleep(3000);
+                }
+            }
+
             inHW = new BufferedReader(new InputStreamReader(heavyWeight.getInputStream()));
             outHW = new PrintWriter(heavyWeight.getOutputStream(), true);
-            System.out.println(ANSI_YELLOW+"Done!");
-        } catch (IOException e) {
+            System.out.println(ANSI_YELLOW + "Connected to HWB!");
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -86,21 +100,30 @@ public class ProcessA extends GenericServer {
     public void mainFunction(String[] args) {
         token = null;
         try {
-            generateSockets();
             CreateServer();
-            System.out.println(ANSI_BLUE+"Config done!");
+            generateSockets();
+
+            synchronized (this){
+                wait();
+                System.out.println(ANSI_BLUE+"Config done!");
+            }
             while(true){
                 System.out.println(ANSI_GREEN+"Listening...");
+
                 while(token == null) listenHeavyweight(inS);
+                /*
                 for (int i=0; i<NUM_LIGHTWEIGHTS; i++)
                     sendActionToLightweight(outLW[i]);
                 answersfromLightweigth=0; // For innutilitza el answers
                 for (int i=0; i < NUM_LIGHTWEIGHTS; i++)
                     listenLightweight(inLW[i]);
+                 */
+                Thread.sleep(1000);
                 token = null;
                 sendTokenToHeavyweight(outHW);
+                System.out.println(ANSI_CYAN+"Token enviat");
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
