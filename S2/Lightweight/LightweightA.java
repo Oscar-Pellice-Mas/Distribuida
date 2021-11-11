@@ -125,9 +125,12 @@ public class LightweightA extends GenericServer {
             //Si no fico això el tercer LW es queda al bucle
             System.out.print("");
         }
-        System.out.print(ANSI_GREEN+"Corrent Threads de canals lightweight...");
+        System.out.println(ANSI_GREEN+"Corrent Threads de canals lightweight...");
         for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
-            if (i != myID) serverCanalList.get(i).start();
+            if (i != myID-1){
+                serverCanalList.get(i).start();
+                System.out.println(ANSI_BLUE+"Llançat el thread i=" + i);
+            }
         }
         System.out.println(ANSI_YELLOW+"Done!");
     }
@@ -200,15 +203,15 @@ public class LightweightA extends GenericServer {
         }
 
         @Override
-        public synchronized void start() {
+        public synchronized void run() {
             ServerSocket serverSocket;
-            System.err.println("THREAD LLANÇAT");
+
             try { // Nomes fer lectura, escritura desde thread principal
 
                 while (true){
 
                     String command = inS.readLine();
-                    //lamport.handleMSG(outS, command, id);
+                    lamport.handleMSG(outS, command, id);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
