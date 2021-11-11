@@ -51,6 +51,8 @@ public class ProcessB extends GenericServer  {
                                     outLW[i].println(Integer.toString(i));
                                     System.out.println(ANSI_YELLOW+"lightweight "+(i+1)+" connected to server!");
                                 }
+                                System.out.println(ANSI_YELLOW+"LWAs connected!");
+                                startWorking();
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }

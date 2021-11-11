@@ -63,7 +63,8 @@ public class ProcessA extends GenericServer {
                                 outLW[i].println((i+1));
                                 System.out.println(ANSI_YELLOW+"lightweight "+(i+1)+" connected to server!");
                             }
-                            System.out.println(ANSI_YELLOW+"LWA connected!");
+                            System.out.println(ANSI_YELLOW+"LWAs connected!");
+                            startWorking();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -153,7 +154,11 @@ public class ProcessA extends GenericServer {
     private void sendActionToLightweight(PrintWriter out) {
         out.println("TOKEN");
     }
-
+    private void startWorking(){
+        synchronized (this){
+            this.notify();
+        }
+    }
 }
 
 class MainHWA{
