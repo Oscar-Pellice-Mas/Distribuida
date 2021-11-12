@@ -74,6 +74,7 @@ public class Lamport extends Thread {
             sendMSG(out, src + " ack " + myId + " " + clock.getValue(myId-1));
         }else if (sections[0].equals("release")) cua.set(src-1,Integer.MAX_VALUE);
 
+        System.out.println("\u001B[33m"+"MSG handled: "+ m);
         synchronized (this){
             this.notify();// Desperta el waits
         }

@@ -128,7 +128,6 @@ public class LightweightA extends GenericServer {
         for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
             if (i != myID-1){
                 serverCanalList.get(i).start();
-
             }
         }
         System.out.println(ANSI_YELLOW+"Done!");
@@ -138,8 +137,8 @@ public class LightweightA extends GenericServer {
 
     public void mainFunction(String[] args) throws InterruptedException {
         connectarHW();
-        crearSockets();
         lamport = new Lamport(myID);
+        crearSockets();
         while (true){
             waitHeavyWeight();
             lamport.requestCS(outLWList);
@@ -201,7 +200,6 @@ public class LightweightA extends GenericServer {
             try { // Nomes fer lectura, escritura desde thread principal
 
                 while (true){
-                    //FIXME: Ara mateix es queda aquí i no reacciona a missatges
                     String command = inS.readLine();
                     System.out.println(ANSI_BLUE+"Missatge: "+ANSI_CYAN+command);
                     lamport.handleMSG(outS, command, id);
