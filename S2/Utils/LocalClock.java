@@ -20,8 +20,9 @@ public class LocalClock {
         }
     }
 
-    public int tick(){
-        return ticks++;
+    public int tick(int myId){
+        value[myId]=++ticks;
+        return ticks;
     }
 
     public int getTicks(){

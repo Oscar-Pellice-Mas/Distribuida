@@ -102,7 +102,7 @@ public class LightweightA extends GenericServer {
                                     //Rebem la id
                                     waitForClient();
                                     int id = Integer.parseInt(inS.readLine());
-                                    System.out.println(ANSI_CYAN+"Guardem la ID + " +id);
+                                    //System.out.println(ANSI_CYAN+"Guardem la ID + " +id);
                                     //El guardem al lloc que li pertoca a la llista
 
                                     serverCanalList.set(id-1, new Canal(id, serverAccepter ,inS, outS));
@@ -120,7 +120,6 @@ public class LightweightA extends GenericServer {
 
         //Anem intenant connectar-nos de mentres
         ConnectLightweights();
-        //TODO: No sé si el connect lightweights acabará abans que el thread o no. S'ha de mirar.
         while(!serverDone){
             //Si no fico això el tercer LW es queda al bucle
             System.out.print("");
@@ -129,15 +128,12 @@ public class LightweightA extends GenericServer {
         for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
             if (i != myID-1){
                 serverCanalList.get(i).start();
-                System.out.println(ANSI_BLUE+"Llançat el thread i=" + i);
+
             }
         }
         System.out.println(ANSI_YELLOW+"Done!");
     }
 
-    void wakeUp(){
-        this.notify();
-    }
     // EXECUCIO
 
     public void mainFunction(String[] args) throws InterruptedException {
@@ -146,14 +142,12 @@ public class LightweightA extends GenericServer {
         lamport = new Lamport(myID);
         while (true){
             waitHeavyWeight();
-            for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
-                lamport.requestCS(serverCanalList.get(i).outS);
-            }
+            lamport.requestCS(serverCanalList);
             for (int i=0; i<10; i++){
-                System.out.println("Sóc el procés lightweight: "+ myID+"\n");
+                System.out.println(ANSI_YELLOW+"Sóc el procés lightweight: "+ myID+"\n");
                 espera1Segon();
             }
-            lamport.releaseCS(outHW);
+            lamport.releaseCS(serverCanalList);
             notifyHeavyWeight();
         }
     }
@@ -185,7 +179,7 @@ public class LightweightA extends GenericServer {
         }
     }
 
-    private class Canal extends Thread {
+    public class Canal extends Thread {
         private int id=0;
 
         private Socket serverAccepter;
@@ -204,18 +198,25 @@ public class LightweightA extends GenericServer {
 
         @Override
         public synchronized void run() {
-            ServerSocket serverSocket;
-
             try { // Nomes fer lectura, escritura desde thread principal
 
                 while (true){
-
+                    //FIXME: Ara mateix es queda aquí i no reacciona a missatges
                     String command = inS.readLine();
+                    System.out.println(ANSI_BLUE+"Missatge: "+ANSI_CYAN+command);
                     lamport.handleMSG(outS, command, id);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+
+        public BufferedReader getInS() {
+            return inS;
+        }
+
+        public PrintWriter getOutS() {
+            return outS;
         }
     }
 }

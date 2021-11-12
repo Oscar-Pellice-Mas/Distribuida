@@ -1,19 +1,18 @@
 package S2.Utils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.util.ArrayList;
+import S2.Lightweight.LightweightA;
 
-public class Lamport {
-    private LocalClock clock;
-    private ArrayList<Integer> cua;
-    private int myId;
+
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Lamport extends Thread {
+    private final LocalClock clock;
+    private final ArrayList<Integer> cua;
+    private final int myId;
     private static final int NUM_LIGHTWEIGHTS = 3;
 
-    private static boolean end = false;
 
     public Lamport(int myId) {
         this.myId = myId;
@@ -24,58 +23,60 @@ public class Lamport {
         }
     }
 
-    public synchronized void requestCS(PrintWriter outHW) {
-        clock.tick();
-        cua.set(myId,clock.getTicks());
-        sendMSG(outHW, "request " + myId + " " + cua.get(myId));
+    public synchronized void requestCS(List<LightweightA.Canal> out) throws InterruptedException {
+        clock.tick(myId-1);
+        cua.set(myId-1,clock.getValue(myId-1));
+        /*Evitem que s'envii a si mateix que no existeix*/
+        for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {if (i!=myId-1)sendMSG(out.get(i).getOutS(), "request " + myId + " " + cua.get(myId-1));}
+        System.out.println("\u001B[32m"+" Requests enviades");
         while (!okayCS()){
-            waitHere();
+            synchronized (this){
+                this.wait();
+            }
         }
     }
 
-    private void sendMSG(PrintWriter outHW, String request) {
-        outHW.println(request+myId);
+    private void sendMSG(PrintWriter out, String request) {
+        out.println(request+myId);
     }
 
-    public synchronized void releaseCS(PrintWriter outHW) {
-        sendMSG(outHW, "request " + myId + " " + cua.get(myId));
-        cua.set(myId, Integer.MAX_VALUE);
+    public synchronized void releaseCS(List<LightweightA.Canal> out) {
+        cua.set(myId-1, Integer.MAX_VALUE);
+        /*Evitem que s'envii a si mateix que no existeix*/
+        for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {if (i!=myId-1)sendMSG(out.get(i).getOutS(), "release " + myId + " " + clock.getValue(myId-1));}
+
     }
+
     public boolean okayCS() {
         for (int i =0; i<NUM_LIGHTWEIGHTS; i++){
-            if (isGreater(cua.get(myId), myId, cua.get(i),i)){
+            if (isGreater(cua.get(myId-1), myId, cua.get(i),i)){
                 return false;
-            }else if (isGreater(cua.get(myId), myId, clock.getValue(i),i)){
+            }else if (isGreater(cua.get(myId-1), myId, clock.getValue(i),i)){
                 return false;
             }
         }
         return true;
     }
 
-    public void waitHere(){
-        while (!end) {
-            try {
-                wait(); // Fer wait de un en un es correcte?
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+
 
     public boolean isGreater(Integer entry1, int myId, Integer entr2, int yourId) {
         if (entr2 == Integer.MAX_VALUE) return false;
         return ((entry1 > entr2)||(entry1.equals(entr2))&&(myId > yourId));
     }
 
-    public synchronized void handleMSG(PrintWriter outHW, String m, int src) {
+    public synchronized void handleMSG(PrintWriter out, String m, int src) {
         String[] sections = m.split(" ");
         int time = Integer.parseInt(sections[2]);
-        clock.recieveAction(src, time);
+        clock.recieveAction(src-1, time);
         if (sections[0].equals("request")){
-            cua.set(src, time);
-            sendMSG(outHW, src + " ack " + myId + " " + clock.getValue(myId));
-        }else if (sections[0].equals("release")) cua.set(src,Integer.MAX_VALUE);
-        notify(); // Desperta el waits
+            cua.set(src-1, time);
+            sendMSG(out, src + " ack " + myId + " " + clock.getValue(myId-1));
+        }else if (sections[0].equals("release")) cua.set(src-1,Integer.MAX_VALUE);
+
+        synchronized (this){
+            this.notify();// Desperta el waits
+        }
     }
 
 }

@@ -111,18 +111,18 @@ public class ProcessA extends GenericServer {
             while(true){
                 System.out.println(ANSI_GREEN+"Listening...");
 
-                while(token == null) listenHeavyweight(inS);
-                /*
+                //while(token == null) listenHeavyweight(inS);
+
                 for (int i=0; i<NUM_LIGHTWEIGHTS; i++)
                     sendActionToLightweight(outLW[i]);
                 answersfromLightweigth=0; // For innutilitza el answers
                 for (int i=0; i < NUM_LIGHTWEIGHTS; i++)
                     listenLightweight(inLW[i]);
-                 */
+
                 Thread.sleep(1000);
-                token = null;
-                sendTokenToHeavyweight(outHW);
-                System.out.println(ANSI_CYAN+"Token enviat");
+                //token = null;
+                //sendTokenToHeavyweight(outHW);
+                //System.out.println(ANSI_CYAN+"Token enviat");
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -154,6 +154,7 @@ public class ProcessA extends GenericServer {
     private void sendActionToLightweight(PrintWriter out) {
         out.println("TOKEN");
     }
+
     private void startWorking(){
         synchronized (this){
             this.notify();
