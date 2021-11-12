@@ -142,12 +142,12 @@ public class LightweightA extends GenericServer {
         lamport = new Lamport(myID);
         while (true){
             waitHeavyWeight();
-            lamport.requestCS(serverCanalList);
+            lamport.requestCS(outLWList);
             for (int i=0; i<10; i++){
                 System.out.println(ANSI_YELLOW+"Sóc el procés lightweight: "+ myID+"\n");
                 espera1Segon();
             }
-            lamport.releaseCS(serverCanalList);
+            lamport.releaseCS(outLWList);
             notifyHeavyWeight();
         }
     }

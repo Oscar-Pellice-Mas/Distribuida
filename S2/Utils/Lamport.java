@@ -23,11 +23,11 @@ public class Lamport extends Thread {
         }
     }
 
-    public synchronized void requestCS(List<LightweightA.Canal> out) throws InterruptedException {
+    public synchronized void requestCS(List<PrintWriter> out) throws InterruptedException {
         clock.tick(myId-1);
         cua.set(myId-1,clock.getValue(myId-1));
         /*Evitem que s'envii a si mateix que no existeix*/
-        for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {if (i!=myId-1)sendMSG(out.get(i).getOutS(), "request " + myId + " " + cua.get(myId-1));}
+        for (int i = 0; i < NUM_LIGHTWEIGHTS-1/*No comptem a sí mateix*/; i++) {if (i!=myId-1)sendMSG(out.get(i), "request " + myId + " " + cua.get(myId-1));}
         System.out.println("\u001B[32m"+" Requests enviades");
         while (!okayCS()){
             synchronized (this){
@@ -40,10 +40,10 @@ public class Lamport extends Thread {
         out.println(request+myId);
     }
 
-    public synchronized void releaseCS(List<LightweightA.Canal> out) {
+    public synchronized void releaseCS(List<PrintWriter> out) {
         cua.set(myId-1, Integer.MAX_VALUE);
         /*Evitem que s'envii a si mateix que no existeix*/
-        for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {if (i!=myId-1)sendMSG(out.get(i).getOutS(), "release " + myId + " " + clock.getValue(myId-1));}
+        for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {if (i!=myId-1)sendMSG(out.get(i), "release " + myId + " " + clock.getValue(myId-1));}
 
     }
 
