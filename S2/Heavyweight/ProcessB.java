@@ -48,7 +48,7 @@ public class ProcessB extends GenericServer  {
                                     lightweights.add(serverSocket.accept());
                                     outLW[i] = new PrintWriter(lightweights.get(i).getOutputStream(), true);
                                     inLW[i] = new BufferedReader(new InputStreamReader(lightweights.get(i).getInputStream()));
-                                    outLW[i].println(Integer.toString(i));
+                                    outLW[i].println(i+1);
                                     System.out.println(ANSI_YELLOW+"lightweight "+(i+1)+" connected to server!");
                                 }
                                 System.out.println(ANSI_YELLOW+"LWAs connected!");

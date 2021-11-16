@@ -1,5 +1,7 @@
 package S2.Utils;
 
+import S2.Lightweight.LightweightA;
+
 public class LocalClock {
     private static final int NUM_LIGHTWEIGHTS = 3;
     private int ticks;
