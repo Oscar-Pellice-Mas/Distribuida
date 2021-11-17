@@ -35,7 +35,9 @@ public class Lamport extends Thread {
                 sendMSG(out.get(i), "request " + myId + " " + cua.get(myId-1));
                 do{
                     response = in.get(i).readLine();
+                    System.out.println("Missatge que es: "+ response);
                     if (response.split(" ")[1].equals("ack")){
+                        System.out.println("ACK rebuda");
                         break;
                     }
                 }while(true);
@@ -50,7 +52,7 @@ public class Lamport extends Thread {
     }
 
     private void sendMSG(PrintWriter out, String request) {
-        out.println(request+myId);
+        out.println(request/*+myId*/);
     }
 
     public synchronized void releaseCS(List<PrintWriter> out) {
@@ -84,6 +86,7 @@ public class Lamport extends Thread {
         clock.recieveAction(src-1, time);
         if (sections[0].equals("request")){
             cua.set(src-1, time);
+            //FIXME: no està arribant el ack a la resta. potse estic enviant per on no toca
             sendMSG(out, src + " ack " + myId + " " + clock.getValue(myId-1));
         }else if (sections[0].equals("release")) cua.set(src-1,Integer.MAX_VALUE);
 
