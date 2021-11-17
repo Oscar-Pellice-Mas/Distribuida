@@ -29,6 +29,7 @@ public class LightweightB  extends GenericServer {
 
     // INICIALITZACIÓ
     private boolean serverDone =false;
+    protected RicAndAgr ra;
 
     private static void connectarHW(){
         try {
@@ -130,16 +131,16 @@ public class LightweightB  extends GenericServer {
 
     public void mainFunction(String[] args) throws InterruptedException {
         connectarHW();
-        RicAndAgr ra = new RicAndAgr(myID);
+        ra = new RicAndAgr(myID);
         crearSockets();
         while (true){
             waitHeavyWeight();
-            ra.requestCS(outHW);
+            ra.requestCS(outLWList);
             for (int i=0; i<10; i++){
                 System.out.println("Sóc el procés lightweight: "+ myID+"\n");
                 espera1Segon();
             }
-            ra.releaseCS(outHW);
+            ra.releaseCS(outLWList);
             notifyHeavyWeight();
         }
 
@@ -186,8 +187,7 @@ public class LightweightB  extends GenericServer {
                 while (true){
                     String command = inS.readLine();
                     System.out.println(ANSI_BLUE+"Missatge: "+ANSI_CYAN+command);
-                    //TODO: Poner el equivalente en Ricart
-                    //lamport.handleMSG(outS, command, id);
+                    ra.handleMSG(outS,command, id);
                 }
             } catch (IOException e) {
                 e.printStackTrace();

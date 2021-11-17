@@ -1,10 +1,10 @@
 package S2.Utils;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
-public class RicAndAgr {
+public class RicAndAgr extends Thread{
     private static final int NUM_LIGHTWEIGHTS = 3;
     private int myts;
     private LamportClock clock;
@@ -19,47 +19,51 @@ public class RicAndAgr {
         this.cua =  new LinkedList<Integer>();
     }
 
-    public void requestCS(PrintWriter outHW) {
+    public void requestCS(List<PrintWriter> outLW) throws InterruptedException {
         clock.tick();
         myts = clock.getValue();
-        broadcastMSG( outHW ,myId + " request" + myts);
+        broadcastMSG(outLW, myId + " request " + myts);
         numOk=0;
-        while (numOk < NUM_LIGHTWEIGHTS-1) waitHere();
-    }
-    public void waitHere(){
+        synchronized(this){
+            wait();
+        }
 
     }
-    private void broadcastMSG(PrintWriter outHW, String s) {
-        outHW.println(s);
+
+    private void broadcastMSG(List<PrintWriter> outLW, String s) {
+        for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {if (i!=myId-1)sendMSG(outLW.get(i), s);}
+
     }
-    public void releaseCS(PrintWriter outHW) {
+
+    public void releaseCS(List<PrintWriter> outHW) {
         myts= Integer.MAX_VALUE;
         while (!cua.isEmpty()){
             int pid = cua.remove(0);
-            sendMSG(outHW,"okay " +" " + myId + " " + clock.getValue());
+            sendMSG(outHW.get(pid-1),"okay " +" " + myId + " " + clock.getValue());
         }
     }
 
-    public void handleMSG(PrintWriter outHW, String m, int src){
+    public void handleMSG(PrintWriter out, String m, int src){
         String[] sections = m.split(" ");
         int time = Integer.parseInt(sections[2]);
         clock.receiveAction(src, time);
         if (sections[0].equals("request")){
             if ((myts==Integer.MAX_VALUE)||(time<myts)||((time==myts)&&(src < myId))){
-                sendMSG(outHW, "okay " +" " + myId + " " + clock.getValue());
+                sendMSG(out, "okay " +" " + myId + " " + clock.getValue());
             }else{
                 cua.add(src);
             }
         }else if (sections[0].equals("okay")){
             numOk++;
             if (numOk == NUM_LIGHTWEIGHTS-1){
-                //TODO: Implement notify
-                notify();
+                synchronized (this){
+                    this.notify();
+                }
             }
         }
     }
 
-    private void sendMSG(PrintWriter outHW, String s) {
-        outHW.println(s);
+    private void sendMSG(PrintWriter out, String s) {
+        out.println(s);
     }
 }
