@@ -3,6 +3,8 @@ package S2.Utils;
 import S2.Lightweight.LightweightA;
 
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,11 +25,22 @@ public class Lamport extends Thread {
         }
     }
 
-    public synchronized void requestCS(List<PrintWriter> out) throws InterruptedException {
+    public synchronized void requestCS(List<PrintWriter> out, List<BufferedReader> in) throws InterruptedException, IOException {
+        String response;
         clock.tick(myId-1);
         cua.set(myId-1,clock.getValue(myId-1));
         /*Evitem que s'envii a si mateix que no existeix*/
-        for (int i = 0; i < NUM_LIGHTWEIGHTS-1/*No comptem a sí mateix*/; i++) {if (i!=myId-1)sendMSG(out.get(i), "request " + myId + " " + cua.get(myId-1));}
+        for (int i = 0; i < NUM_LIGHTWEIGHTS-1/*No comptem a sí mateix*/; i++) {
+            if (i!=myId-1){
+                sendMSG(out.get(i), "request " + myId + " " + cua.get(myId-1));
+                do{
+                    response = in.get(i).readLine();
+                    if (response.split(" ")[1].equals("ack")){
+                        break;
+                    }
+                }while(true);
+            }
+        }
         System.out.println("\u001B[32m"+" Requests enviades");
         while (!okayCS()){
             synchronized (this){

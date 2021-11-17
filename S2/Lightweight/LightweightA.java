@@ -27,7 +27,7 @@ public class LightweightA extends GenericServer {
     private  List<Canal> serverCanalList; //Canals per escoltar
     private  List<Socket> socketList; //Sockets de sortida
     private  List<PrintWriter> outLWList; //outLW de sortida
-    private  List<BufferedReader> inLWLIST; //inLW de sortida
+    private  List<BufferedReader> inLWList; //inLW de sortida
 
     // INICIALITZACIÓ
     private boolean serverDone =false;
@@ -60,7 +60,7 @@ public class LightweightA extends GenericServer {
                 if (i != myID){
                     Socket aux = new Socket(LOCALHOST,STARTING_PORT_LWA+i);
                     socketList.add(aux);
-                    inLWLIST.add( new BufferedReader(new InputStreamReader(aux.getInputStream())));
+                    inLWList.add( new BufferedReader(new InputStreamReader(aux.getInputStream())));
                     outLWList.add(  new PrintWriter(aux.getOutputStream(), true));
                     outLWList.get(outLWList.size()-1).println(myID);
                 }
@@ -80,7 +80,7 @@ public class LightweightA extends GenericServer {
         //TODO: Usar excepciones para conectarnos. Intentamos conectarnos con el socket, si no podemos dará exception y hacemos accept
         socketList = new ArrayList<>();
         outLWList = new ArrayList<PrintWriter>();
-        inLWLIST = new ArrayList<BufferedReader>();
+        inLWList = new ArrayList<BufferedReader>();
         serverCanalList = new ArrayList<>();
 
         System.out.print(ANSI_GREEN+"Creant server socket...");
@@ -134,13 +134,13 @@ public class LightweightA extends GenericServer {
 
     // EXECUCIO
 
-    public void mainFunction(String[] args) throws InterruptedException {
+    public void mainFunction(String[] args) throws InterruptedException, IOException {
         connectarHW();
         lamport = new Lamport(myID);
         crearSockets();
         while (true){
             waitHeavyWeight();
-            lamport.requestCS(outLWList);
+            lamport.requestCS(outLWList, inLWList);
             for (int i=0; i<10; i++){
                 System.out.println(ANSI_YELLOW+"Sóc el procés lightweight: "+ myID+"\n");
                 espera1Segon();
@@ -222,7 +222,7 @@ class MainLWA{
         LightweightA LWA = new LightweightA();
         try {
             LWA.mainFunction(args);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
     }
