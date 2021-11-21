@@ -76,6 +76,17 @@ public class LightweightA extends GenericServer {
         }
         System.out.println(ANSI_YELLOW+"Done!");
     }
+    private void rearrangeChanneloutStoNextChannelinS(){
+        int j=0;
+        for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
+            //Mirem si la id es igual a la nostra
+            if (i != myID-1){
+                PrintWriter aux =outLWList.get(j);
+                serverCanalList.get(i).setOutS(aux);
+                j++;
+            }
+        }
+    }
     private  void crearSockets() throws InterruptedException {
         //TODO: Usar excepciones para conectarnos. Intentamos conectarnos con el socket, si no podemos dará exception y hacemos accept
         socketList = new ArrayList<>();
@@ -123,6 +134,7 @@ public class LightweightA extends GenericServer {
             //Si no fico això el tercer LW es queda al bucle
             System.out.print("");
         }
+        rearrangeChanneloutStoNextChannelinS();
         System.out.println(ANSI_GREEN+"Corrent Threads de canals lightweight...");
         for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
             if (i != myID-1){
@@ -214,6 +226,10 @@ public class LightweightA extends GenericServer {
 
         public PrintWriter getOutS() {
             return outS;
+        }
+
+        public void setOutS(PrintWriter outS) {
+            this.outS = outS;
         }
     }
 }
