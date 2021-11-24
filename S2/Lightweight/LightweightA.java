@@ -195,7 +195,8 @@ public class LightweightA extends GenericServer {
         private Socket serverAccepter;
         private BufferedReader inS;
         private PrintWriter outS;
-        public Canal(int id, Socket serverAccepter, BufferedReader inS, PrintWriter outS){
+        public Canal( int id, Socket serverAccepter, BufferedReader inS, PrintWriter outS){
+
             this.id = id;
             this.inS = inS;
             this.outS = outS;
@@ -213,7 +214,8 @@ public class LightweightA extends GenericServer {
                 while (true){
                     String command = inS.readLine();
                     System.out.println(ANSI_BLUE+"Missatge: "+ANSI_CYAN+command);
-                    lamport.handleMSG(outS, command, id);
+                    lamport.handleMSG(outS, command, id, instance);
+                    System.out.println("després de handlemsg");
                 }
             } catch (IOException e) {
                 e.printStackTrace();

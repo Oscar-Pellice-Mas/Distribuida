@@ -80,9 +80,11 @@ public class Lamport extends Thread {
         return ((entry1 > entr2)||(entry1.equals(entr2))&&(myId > yourId));
     }
 
-    public synchronized void handleMSG(PrintWriter out, String m, int src) {
+    public  void handleMSG(PrintWriter out, String m, int src, LightweightA instance) {
+
         String[] sections = m.split(" ");
         int time = Integer.parseInt(sections[2]);
+
         clock.recieveAction(src-1, time);
         if (sections[0].equals("request")){
             cua.set(src-1, time);
@@ -91,8 +93,8 @@ public class Lamport extends Thread {
         }else if (sections[0].equals("release")) cua.set(src-1,Integer.MAX_VALUE);
 
         System.out.println("\u001B[33m"+"MSG handled: "+ m);
-        synchronized (this){
-            this.notify();// Desperta el waits
+        synchronized (instance){
+            instance.notify();// Desperta el waits
         }
     }
 
