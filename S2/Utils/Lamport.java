@@ -27,17 +27,20 @@ public class Lamport extends Thread {
 
     public synchronized void requestCS(List<PrintWriter> out, List<BufferedReader> in) throws InterruptedException, IOException {
         String response;
+        int j=0; //Index secundari per comptar l'accès a l'array
         clock.tick(myId-1);
         cua.set(myId-1,clock.getValue(myId-1));
         /*Evitem que s'envii a si mateix que no existeix*/
-        for (int i = 0; i < NUM_LIGHTWEIGHTS-1/*No comptem a sí mateix*/; i++) {
+
+        for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
             if (i!=myId-1){
-                sendMSG(out.get(i), "request " + myId + " " + cua.get(myId-1));
+                sendMSG(out.get(j), "request " + myId + " " + cua.get(myId-1));
                 do{
-                    response = in.get(i).readLine();
+                    response = in.get(j).readLine();
                     System.out.println("Missatge que es: "+ response);
                     if (response.split(" ")[1].equals("ack")){
                         System.out.println("ACK rebuda");
+                        j++;
                         break;
                     }
                 }while(true);
