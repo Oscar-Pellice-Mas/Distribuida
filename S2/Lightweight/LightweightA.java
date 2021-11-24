@@ -134,7 +134,8 @@ public class LightweightA extends GenericServer {
             //Si no fico això el tercer LW es queda al bucle
             System.out.print("");
         }
-        rearrangeChanneloutStoNextChannelinS();
+        //TODO: Igual esto hace falta. igual no. Es lo de redireccionar las salidas del SLWx al otro SLWx en vez de al CLWx
+        //rearrangeChanneloutStoNextChannelinS();
         System.out.println(ANSI_GREEN+"Corrent Threads de canals lightweight...");
         for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
             if (i != myID-1){
