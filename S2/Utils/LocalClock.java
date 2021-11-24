@@ -35,7 +35,8 @@ public class LocalClock {
         return value[id];
     }
 
-    public void recieveAction(int id, int time){
-        value[id] = Integer.max(value[id], time)+1;
+    public void recieveAction(int id, int time, int myId){
+        value[id] = Integer.max(value[id], time);
+        value[myId] = Integer.max(value[myId], time)+1;
     }
 }

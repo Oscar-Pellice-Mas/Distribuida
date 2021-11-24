@@ -135,7 +135,7 @@ public class LightweightA extends GenericServer {
             System.out.print("");
         }
         //TODO: Igual esto hace falta. igual no. Es lo de redireccionar las salidas del SLWx al otro SLWx en vez de al CLWx
-        //rearrangeChanneloutStoNextChannelinS();
+        rearrangeChanneloutStoNextChannelinS();
         System.out.println(ANSI_GREEN+"Corrent Threads de canals lightweight...");
         for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
             if (i != myID-1){
@@ -210,15 +210,16 @@ public class LightweightA extends GenericServer {
 
         @Override
         public synchronized void run() {
-            try { // Nomes fer lectura, escritura desde thread principal
 
+            try { // Nomes fer lectura, escritura desde thread principal
+                sleep(1000*myID);
                 while (true){
                     String command = inS.readLine();
                     System.out.println(ANSI_BLUE+"Missatge: "+ANSI_CYAN+command);
                     lamport.handleMSG(outS, command, id, instance);
-                    System.out.println("després de handlemsg");
+                    //System.out.println("després de handlemsg");
                 }
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
         }
