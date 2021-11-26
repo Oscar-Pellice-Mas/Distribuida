@@ -18,7 +18,7 @@ public class Lamport extends Thread {
 
     public Lamport(int myId) {
         this.myId = myId;
-        this.clock = LocalClock.getLocalClock();
+        this.clock = LocalClock.getLocalClock(myId-1);
         this.cua = new ArrayList<>();
         for (int i = 0; i < NUM_LIGHTWEIGHTS;i++ ){
             cua.add(Integer.MAX_VALUE);
@@ -37,20 +37,11 @@ public class Lamport extends Thread {
             if (i!=myId-1){
                 sendMSG(out.get(j), "request " + myId + " " + cua.get(myId-1));
                 j++;
-                //FIXME: INTENTEM ARREGLAR LA GESTIÓ DE LA ACK
-                /*
-                do{
-                    response = in.get(j).readLine();
-                    //System.out.println("Missatge que es: "+ response);
-                    if (response.split(" ")[1].equals("ack")){
-                        System.out.println("ACK rebuda");
-                        j++;
-                        break;
-                    }
-                }while(true);
-                */
             }
         }
+        //FIXME: NO ESTOY SEGURO DE QUE ESTO ESTÉ BIEN
+        clock.sendAction(myId-1);
+
         System.out.println("\u001B[32m"+" Requests enviades");
         okay = okayCS();
         System.out.println("Estoy OK? " + okay);
@@ -68,6 +59,8 @@ public class Lamport extends Thread {
 
     private void sendMSG(PrintWriter out, String request) {
         out.println(request/*+myId*/);
+        //FIXME: NO ESTOY SEGURO DE QUE ESTO ESTÉ BIEN
+        clock.sendAction(myId-1);
     }
 
     public synchronized void releaseCS(List<PrintWriter> out) {

@@ -8,23 +8,25 @@ public class LocalClock {
     private int value[] = new int[NUM_LIGHTWEIGHTS];
     private static LocalClock instance;
 
-    public static LocalClock getLocalClock(){
+    public static LocalClock getLocalClock(int myId){
         if (instance == null){
-            instance = new LocalClock();
+            instance = new LocalClock(myId);
         }
         return instance;
     }
 
-    private LocalClock() {
+    private LocalClock(int myId) {
         this.ticks = 0;
         for (int i =0; i<NUM_LIGHTWEIGHTS; i++){
             value[i] = 0;
         }
+        value[myId] = 1;
     }
 
     public int tick(int myId){
-        value[myId]=++ticks;
-        return ticks;
+        //value[myId]=++ticks;
+        value[myId]++;
+        return value[myId];
     }
 
     public int getTicks(){
@@ -35,6 +37,9 @@ public class LocalClock {
         return value[id];
     }
 
+    public void sendAction(int id){
+        tick(id);
+    }
     public void recieveAction(int id, int time, int myId){
         value[id] = Integer.max(value[id], time);
         value[myId] = Integer.max(value[myId], time)+1;
