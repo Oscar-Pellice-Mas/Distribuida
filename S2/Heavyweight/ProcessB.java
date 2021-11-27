@@ -18,6 +18,7 @@ public class ProcessB extends GenericServer  {
     private  String token;
     private ArrayList<Socket> lightweights;
     private  Socket heavyWeight_A = null;
+    private int answersfromLightweigth = 0;
 
     private  PrintWriter outHW = null;
     private  BufferedReader inHW = null;
@@ -51,7 +52,7 @@ public class ProcessB extends GenericServer  {
                                     outLW[i].println(i+1);
                                     System.out.println(ANSI_YELLOW+"lightweight "+(i+1)+" connected to server!");
                                 }
-                                System.out.println(ANSI_YELLOW+"LWAs connected!");
+                                System.out.println(ANSI_YELLOW+"LWBs connected!");
                                 startWorking();
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -94,22 +95,21 @@ public class ProcessB extends GenericServer  {
                 wait();
                 System.out.println(ANSI_BLUE+"Config done!");
             }
+            System.out.println(ANSI_GREEN+"Listening...");
             while (true) {
-                System.out.println(ANSI_GREEN+"Listening...");
-                scanner.next();
-                while(token == null) listenHeavyweight(inS);
+                //while(token == null) listenHeavyweight(inS);
 
-                /*for (int i=0; i<NUM_LIGHTWEIGHTS; i++)
+                for (int i=0; i<NUM_LIGHTWEIGHTS; i++)
                     sendActionToLightweight(outLW[i]);
-                //Netejem la cua
-                cuaLW.removeAll(cuaLW);
+                System.out.println(ANSI_YELLOW + "TOKEN SENT");
                 answersfromLightweigth=0;
                 for (int i=0; answersfromLightweigth < NUM_LIGHTWEIGHTS; i++)
-                    listenLightweight(inLW[i]);*/
-
+                    listenLightweight(inLW[i]);
+                System.out.println(ANSI_YELLOW+ "LW ARE DONE");
                 Thread.sleep(1000);
-                sendTokenToHeavyweight(outHW);
-                System.out.println(ANSI_CYAN+"Token enviat");
+                //sendTokenToHeavyweight(outHW);
+                //token=null;
+                //System.out.println(ANSI_CYAN+"Token enviat");
             }
         } catch(IOException | InterruptedException e){
             e.printStackTrace();
@@ -133,23 +133,21 @@ public class ProcessB extends GenericServer  {
     private  void listenLightweight(BufferedReader in) throws IOException {
         String msg = in.readLine(); //estructura: <request/okay> <ID> <timestamp>
 
-        cuaLW.addFirst(msg);
-        answersfromLightweight++;
-        /*
         if (msg.equalsIgnoreCase("TOKEN")){
-            token = "TOKEN";
             answersfromLightweigth++;
         }
-        else System.out.println(msg);*/
+        else System.out.println(msg);
     }
 
     private  void sendActionToLightweight(PrintWriter out) {
         for (int i=0; i < NUM_LIGHTWEIGHTS; i++){
-            out.println(cuaLW.get(i));
+            out.println("TOKEN");
         }
     }
     private void startWorking(){
-        this.notify();
+        synchronized (this){
+            this.notify();
+        }
     }
 }
 class MainHWB {

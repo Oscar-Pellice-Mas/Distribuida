@@ -1,9 +1,7 @@
 package S2.Utils;
 
 public class LamportClock {
-    private static final int NUM_LIGHTWEIGHTS = 2;
     private int tics;
-    private int value[] = new int[NUM_LIGHTWEIGHTS];
     private static LamportClock instance;
 
     public static LamportClock getLamportClock(){
@@ -14,10 +12,7 @@ public class LamportClock {
     }
 
     private LamportClock() {
-        this.tics = 0;
-        for (int i =0; i<NUM_LIGHTWEIGHTS; i++){
-            value[i] = 0;
-        }
+        this.tics = 1;
     }
 
     public int getValue(){
@@ -30,6 +25,6 @@ public class LamportClock {
         tics++;
     }
     public void receiveAction(int src, int receivedValue){
-        value[src] = Integer.max(tics, receivedValue) + 1;
+        tics = Integer.max(tics, receivedValue) + 1;
     }
 }

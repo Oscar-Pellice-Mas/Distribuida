@@ -27,7 +27,7 @@ public class Lamport extends Thread {
 
     public synchronized void requestCS(List<PrintWriter> out, List<BufferedReader> in) throws InterruptedException, IOException {
         String response;
-        boolean okay = false;
+        boolean okay;
         int j=0; //Index secundari per comptar l'accès a l'array
         clock.tick(myId-1);
         cua.set(myId-1,clock.getValue(myId-1));
@@ -39,7 +39,6 @@ public class Lamport extends Thread {
                 j++;
             }
         }
-        //FIXME: NO ESTOY SEGURO DE QUE ESTO ESTÉ BIEN
         clock.sendAction(myId-1);
 
         System.out.println("\u001B[32m"+" Requests enviades");
@@ -59,7 +58,6 @@ public class Lamport extends Thread {
 
     private void sendMSG(PrintWriter out, String request) {
         out.println(request/*+myId*/);
-        //FIXME: NO ESTOY SEGURO DE QUE ESTO ESTÉ BIEN
         clock.sendAction(myId-1);
     }
 
@@ -80,7 +78,7 @@ public class Lamport extends Thread {
         for (int i =0; i<NUM_LIGHTWEIGHTS; i++){
             if (isGreater(cua.get(myId-1), myId, cua.get(i),i)){
                 return false;
-            }else if (isGreater(cua.get(myId-1), myId, clock.getValue(i),i)){
+            }else if (isGreater(cua.get(myId - 1), myId, clock.getValue(i),i)){
                 return false;
             }
         }
@@ -89,10 +87,10 @@ public class Lamport extends Thread {
 
 
 
-    public boolean isGreater(Integer entry1, int myId, Integer entr2, int yourId) {
+    public boolean isGreater(int entry1, int myId, int entr2, int yourId) {
         if (entr2 == Integer.MAX_VALUE) return false;
         return ((entry1 > entr2)||
-                ((entry1.equals(entr2))&&(myId > yourId)));
+                ((entry1==entr2)&&(myId > yourId)));
     }
 
     public  void handleMSG(PrintWriter out, String m, int src, LightweightA instance) {
