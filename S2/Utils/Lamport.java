@@ -76,21 +76,25 @@ public class Lamport extends Thread {
 
     public boolean okayCS() {
         for (int i =0; i<NUM_LIGHTWEIGHTS; i++){
-            if (isGreater(cua.get(myId-1), myId, cua.get(i),i)){
+            if (isGreater(cua.get(myId-1), myId, cua.get(i),i+1)){
+                System.out.println("A");
                 return false;
-            }else if (isGreater(cua.get(myId - 1), myId, clock.getValue(i),i)){
+            }else if (isGreater(cua.get(myId - 1), myId, clock.getValue(i),i+1)){
+                System.out.println("B");
                 return false;
             }
+            System.out.println("-- OKAY next ---");
         }
+        System.out.println("C");
         return true;
     }
 
 
 
-    public boolean isGreater(int entry1, int myId, int entr2, int yourId) {
-        if (entr2 == Integer.MAX_VALUE) return false;
-        return ((entry1 > entr2)||
-                ((entry1==entr2)&&(myId > yourId)));
+    public boolean isGreater(int entry1, int myId, int entry2, int yourId) {
+        if (entry2 == Integer.MAX_VALUE) return false;
+        return ((entry1 > entry2)||
+                ((entry1==entry2) && (myId > yourId)));
     }
 
     public  void handleMSG(PrintWriter out, String m, int src, LightweightA instance) {
@@ -101,7 +105,6 @@ public class Lamport extends Thread {
         clock.recieveAction(src-1, time, myId-1);
         if (sections[0].equals("request")){
             cua.set(src-1, time);
-            //FIXME: no està arribant el ack a la resta. potse estic enviant per on no toca
             sendMSG(out, "ack "+ myId + " " + clock.getValue(myId-1));
         }else if (sections[0].equals("release")){
             cua.set(src-1,Integer.MAX_VALUE);
