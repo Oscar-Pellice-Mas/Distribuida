@@ -31,7 +31,7 @@ public class GenericServer extends Thread{
             // Connect to HW
             serverSocket = new ServerSocket(port);
         } catch (IOException e) {
-            System.err.println("Aquest port es troba ocupat");
+            System.err.println("Port occupied. Leaving program");
             System.exit(0);
         }
     }

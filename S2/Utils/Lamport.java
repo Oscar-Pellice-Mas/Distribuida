@@ -43,16 +43,14 @@ public class Lamport extends Thread {
 
         System.out.println("\u001B[32m"+" Requests enviades");
         okay = okayCS();
-        System.out.println("Estoy OK? " + okay);
         while (!okay){
             synchronized (this){
                 this.wait();
-                System.out.println("Estic fora del wait");
             }
             okay=okayCS();
-            System.out.println("clock: " +clock.getValue(0)+","+clock.getValue(1)+","+clock.getValue(2));
-            System.out.println("CUA: " + cua.get(0) +","+cua.get(1)+","+cua.get(2));
-            System.out.println("Okay? :" + okay );
+            //System.out.println("clock: " +clock.getValue(0)+","+clock.getValue(1)+","+clock.getValue(2));
+            //System.out.println("CUA: " + cua.get(0) +","+cua.get(1)+","+cua.get(2));
+            //System.out.println("Okay? :" + okay );
         }
     }
 
@@ -77,15 +75,11 @@ public class Lamport extends Thread {
     public boolean okayCS() {
         for (int i =0; i<NUM_LIGHTWEIGHTS; i++){
             if (isGreater(cua.get(myId-1), myId, cua.get(i),i+1)){
-                System.out.println("A");
                 return false;
             }else if (isGreater(cua.get(myId - 1), myId, clock.getValue(i),i+1)){
-                System.out.println("B");
                 return false;
             }
-            System.out.println("-- OKAY next ---");
         }
-        System.out.println("C");
         return true;
     }
 
@@ -113,7 +107,6 @@ public class Lamport extends Thread {
         //System.out.println("\u001B[33m"+"MSG handled: "+ m);
         synchronized (this){
             this.notify();// Desperta el waits
-            System.out.println("NOTIFY FET");
         }
     }
 

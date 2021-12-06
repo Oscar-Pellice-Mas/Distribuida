@@ -12,9 +12,7 @@ import java.util.Scanner;
 
 public class ProcessB extends GenericServer  {
     private static final int NUM_LIGHTWEIGHTS = 2;
-    //private static final int NUM_LIGHTWEIGHTS = 2;
 
-    private  int answersfromLightweight;
     private  String token;
     private ArrayList<Socket> lightweights;
     private  Socket heavyWeight_A = null;
@@ -25,11 +23,9 @@ public class ProcessB extends GenericServer  {
     private  PrintWriter outLW[] = new PrintWriter[NUM_LIGHTWEIGHTS];
     private  BufferedReader inLW[] = new BufferedReader[NUM_LIGHTWEIGHTS];
 
-
-    private  LinkedList<String> cuaLW = new LinkedList<String>();
+    private  LinkedList<String> cuaLW = new LinkedList<>(); // Useless
 
     private  void CreateServer(){
-
             System.out.print(ANSI_GREEN+"Create server socket...");
             super.CreateServer(PORT_HWB);
             System.out.println(ANSI_YELLOW+"Done!");
@@ -42,15 +38,14 @@ public class ProcessB extends GenericServer  {
                                 waitForClient();
                                 System.out.println(ANSI_YELLOW+"Process A connected to server!");
 
-
-                                lightweights = new ArrayList<Socket>();
+                                lightweights = new ArrayList<>();
                                 for(int i =0; i<NUM_LIGHTWEIGHTS;i++) {
-                                    System.out.println(ANSI_GREEN+"Waiting for lightweight "+ (i+1) + "...");
+                                    System.out.print(ANSI_GREEN+"Waiting for lightweight "+ (i+1) + "...");
                                     lightweights.add(serverSocket.accept());
                                     outLW[i] = new PrintWriter(lightweights.get(i).getOutputStream(), true);
                                     inLW[i] = new BufferedReader(new InputStreamReader(lightweights.get(i).getInputStream()));
                                     outLW[i].println(i+1);
-                                    System.out.println(ANSI_YELLOW+"lightweight "+(i+1)+" connected to server!");
+                                    System.out.println(ANSI_YELLOW+" connected to server!");
                                 }
                                 System.out.println(ANSI_YELLOW+"LWBs connected!");
                                 startWorking();
@@ -84,9 +79,8 @@ public class ProcessB extends GenericServer  {
     }
 
     void mainFunction(String[] args) {
-        //Creació dels socket cap el ligthweight
         token="TOKEN";
-        Scanner scanner = new Scanner(System.in);
+
         try {
             CreateServer();
             generateSockets();
@@ -97,19 +91,20 @@ public class ProcessB extends GenericServer  {
             }
             System.out.println(ANSI_GREEN+"Listening...");
             while (true) {
-                //while(token == null) listenHeavyweight(inS);
+                while(token == null) listenHeavyweight(inS);
 
                 for (int i=0; i<NUM_LIGHTWEIGHTS; i++)
                     sendActionToLightweight(outLW[i]);
-                System.out.println(ANSI_YELLOW + "TOKEN SENT");
-                answersfromLightweigth=0;
+                System.out.println(ANSI_YELLOW + "Token sent to lightweights");
+                answersfromLightweigth=0; // Useless???
                 for (int i=0; answersfromLightweigth < NUM_LIGHTWEIGHTS; i++)
                     listenLightweight(inLW[i]);
-                System.out.println(ANSI_YELLOW+ "LW ARE DONE");
+                System.out.println(ANSI_YELLOW+ "Lightweights are done");
+
                 Thread.sleep(1000);
-                //sendTokenToHeavyweight(outHW);
-                //token=null;
-                //System.out.println(ANSI_CYAN+"Token enviat");
+
+                sendTokenToHeavyweight(outHW);
+                System.out.println(ANSI_CYAN+"Token sent to HWA");
             }
         } catch(IOException | InterruptedException e){
             e.printStackTrace();
@@ -125,13 +120,13 @@ public class ProcessB extends GenericServer  {
         String msg = in.readLine();
         if (msg.equalsIgnoreCase("TOKEN")){
             token = "TOKEN";
-            System.out.println("Sóc el Process B i puc parlar.");
+            System.out.println("Token received");
         }
         else System.out.println(msg);
     }
 
     private  void listenLightweight(BufferedReader in) throws IOException {
-        String msg = in.readLine(); //estructura: <request/okay> <ID> <timestamp>
+        String msg = in.readLine(); //estructura: <request/okay> <ID> <timestamp> NO???
 
         if (msg.equalsIgnoreCase("TOKEN")){
             answersfromLightweigth++;

@@ -10,35 +10,40 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 public class LightweightA extends GenericServer {
+    // Number of lightweights
     private LightweightA instance;
     private final int NUM_LIGHTWEIGHTS = 3;
 
-    private Lamport lamport;
-    private int myID;
+    // Socket information
+
     // Heavyweight
     private  Socket socketHW;
     private  PrintWriter outHW;
     private  BufferedReader inHW;
 
-    // Lightweights
-    private  List<Canal> serverCanalList; //Canals per escoltar
-    private  List<Socket> socketList; //Sockets de sortida
-    private  List<PrintWriter> outLWList; //outLW de sortida
-    private  List<BufferedReader> inLWList; //inLW de sortida
+    // Lightweights information
+    private  List<Canal> serverCanalList; // Listening channels
+    private  List<Socket> socketList;
+    private  List<PrintWriter> outLWList;
+    private  List<BufferedReader> inLWList;
 
-    // INICIALITZACIÓ
+    // LW ID
+    private int myID;
+
+    // Initialization
+    private Lamport lamport;
     private boolean serverDone =false;
 
     public LightweightA() {
         this.instance = this;
     }
 
-    private  void connectarHW(){
+    // Connexion to Heavyweight
+    private  void ConnectHeavyweights(){
         try {
-            System.out.print(ANSI_GREEN+"Creant socket a heavyweight...");
+            System.out.print(ANSI_GREEN+"Creating socket to heavyweight...");
             socketHW = new Socket("127.0.0.1",PORT_HWA);
             inHW = new BufferedReader(new InputStreamReader(socketHW.getInputStream()));
             outHW = new PrintWriter(socketHW.getOutputStream(), true);
@@ -50,14 +55,13 @@ public class LightweightA extends GenericServer {
         }
     }
 
+    // Connexion to Lightweight
     private void ConnectLightweights(){
-        Scanner scanner = new Scanner(System.in);
         System.out.println(ANSI_GREEN+"Waiting other lightweights...");
 
         for (int i = 1; i <= NUM_LIGHTWEIGHTS; i++) {
             try{
-                //Mirem si la id es igual a la nostra
-                if (i != myID){
+                if (i != myID){ // To not connect with the owned id
                     Socket aux = new Socket(LOCALHOST,STARTING_PORT_LWA+i);
                     socketList.add(aux);
                     inLWList.add( new BufferedReader(new InputStreamReader(aux.getInputStream())));
@@ -76,6 +80,8 @@ public class LightweightA extends GenericServer {
         }
         System.out.println(ANSI_YELLOW+"Done!");
     }
+
+    // UTIL?
     private void rearrangeChanneloutStoNextChannelinS(){
         int j=0;
         for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
@@ -87,56 +93,53 @@ public class LightweightA extends GenericServer {
             }
         }
     }
-    private  void crearSockets() throws InterruptedException {
-        //TODO: Usar excepciones para conectarnos. Intentamos conectarnos con el socket, si no podemos dará exception y hacemos accept
+
+    // Socket creation
+    private  void crearSockets() {
+
         socketList = new ArrayList<>();
-        outLWList = new ArrayList<PrintWriter>();
-        inLWList = new ArrayList<BufferedReader>();
+        outLWList = new ArrayList<>();
+        inLWList = new ArrayList<>();
         serverCanalList = new ArrayList<>();
 
         System.out.print(ANSI_GREEN+"Creant server socket...");
         CreateServer(STARTING_PORT_LWA+myID);
         System.out.println(ANSI_YELLOW+"Done!");
 
-        System.out.println(ANSI_GREEN+"Tirant thread per escoltar LW...");
-        //Thread anònim per rebre les connexions
+        System.out.println(ANSI_GREEN+"Running connexion threads...");
+        //Anonymous thread to receive connexions
         new Thread(
-                new Runnable() {
-                    public void run() {
-
-                        for (int i = 0; i < NUM_LIGHTWEIGHTS; i++){serverCanalList.add(new Canal());}
-                        for (int i = 0; i < NUM_LIGHTWEIGHTS; i++){
-                            // Rebre quin server es i guardar al seu lloc
-                            try {
-                                if (i != myID-1){
-                                    //Rebem la id
-                                    waitForClient();
-                                    int id = Integer.parseInt(inS.readLine());
-                                    //System.out.println(ANSI_CYAN+"Guardem la ID + " +id);
-                                    //El guardem al lloc que li pertoca a la llista
-
-                                    serverCanalList.set(id-1, new Canal(id, serverAccepter ,inS, outS));
-                                }
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                () -> {
+                    int id;
+                    for (int i = 0; i < NUM_LIGHTWEIGHTS; i++){serverCanalList.add(new Canal());}
+                    for (int i = 0; i < NUM_LIGHTWEIGHTS; i++){
+                        // Register all the connexion with the id
+                        try {
+                            if (i != myID-1){
+                                //Wait to receive ID
+                                waitForClient();
+                                id = Integer.parseInt(inS.readLine());
+                                serverCanalList.set(id-1, new Canal(id, inS, outS));
                             }
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
-                        System.out.println(ANSI_CYAN+"S'han connectat tots els LW!");
-                        //instance.wakeUp();
-                        serverDone=true;
                     }
+                    System.out.println(ANSI_CYAN+"Al LW connexions ready!");
+                    serverDone=true;
                 }
         ).start();
 
-        //Anem intenant connectar-nos de mentres
+        // Try to connect to other servers meanwhile
         ConnectLightweights();
         while(!serverDone){
             //Si no fico això el tercer LW es queda al bucle
             System.out.print("");
         }
-        //TODO: Igual esto hace falta. igual no. Es lo de redireccionar las salidas del SLWx al otro SLWx en vez de al CLWx
+
         rearrangeChanneloutStoNextChannelinS();
-        System.out.println(ANSI_GREEN+"Corrent Threads de canals lightweight...");
+
+        System.out.println(ANSI_GREEN + "Activating connexion with lightweights...");
         for (int i = 0; i < NUM_LIGHTWEIGHTS; i++) {
             if (i != myID-1){
                 serverCanalList.get(i).start();
@@ -145,17 +148,16 @@ public class LightweightA extends GenericServer {
         System.out.println(ANSI_YELLOW+"Done!");
     }
 
-    // EXECUCIO
-
+    // Main function
     public void mainFunction(String[] args) throws InterruptedException, IOException {
-        connectarHW();
+        ConnectHeavyweights();
         lamport = new Lamport(myID);
         crearSockets();
         while (true){
             waitHeavyWeight();
             lamport.requestCS(outLWList, inLWList);
             for (int i=0; i<10; i++){
-                System.out.println(ANSI_YELLOW+"Sóc el procés lightweight: "+ myID+"\n");
+                System.out.println(ANSI_YELLOW+"("+i+") Sóc el procés lightweight: "+ myID);
                 espera1Segon();
             }
             lamport.releaseCS(outLWList);
@@ -182,8 +184,9 @@ public class LightweightA extends GenericServer {
         String msg;
         try {
             msg = inHW.readLine();
-            if (msg.equalsIgnoreCase("TOKEN")){
-                System.out.println("Token recieved");}
+            if (msg.equalsIgnoreCase("TOKEN")) {
+                System.out.println("Token received from HW");
+            }
             else System.out.println("HW ->" + msg);
         } catch (IOException e) {
             e.printStackTrace();
@@ -192,16 +195,12 @@ public class LightweightA extends GenericServer {
 
     public class Canal extends Thread {
         private int id=0;
-
-        private Socket serverAccepter;
         private BufferedReader inS;
         private PrintWriter outS;
-        public Canal( int id, Socket serverAccepter, BufferedReader inS, PrintWriter outS){
-
+        public Canal( int id, BufferedReader inS, PrintWriter outS){
             this.id = id;
             this.inS = inS;
             this.outS = outS;
-            this.serverAccepter=serverAccepter;
         }
 
         public Canal() {
@@ -212,24 +211,15 @@ public class LightweightA extends GenericServer {
         public synchronized void run() {
 
             try { // Nomes fer lectura, escritura desde thread principal
-                sleep(1000*myID);
+                sleep(1000L *myID);
                 while (true){
                     String command = inS.readLine();
                     System.out.println(ANSI_BLUE+"Missatge: "+ANSI_CYAN+command);
                     lamport.handleMSG(outS, command, id, instance);
-                    //System.out.println("després de handlemsg");
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
-        }
-
-        public BufferedReader getInS() {
-            return inS;
-        }
-
-        public PrintWriter getOutS() {
-            return outS;
         }
 
         public void setOutS(PrintWriter outS) {
