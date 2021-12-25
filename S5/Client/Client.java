@@ -13,11 +13,13 @@ public class Client {
         Socket connection;
         PrintWriter outS      = null;
         BufferedReader inS    = null;
+        int offset;
         //Leemos el archivo y parseamos
         TransactionList lista = new TransactionList(args[0]);
         //Parseo finalizado. Hora de enviar
+        offset = (args.length==1?0:Integer.parseInt(args[1]));
         //Conectamos con el server
-        connection = new Socket("127.0.0.1", 8000);
+        connection = new Socket("127.0.0.1", 8000+offset);
         inS=new BufferedReader(new InputStreamReader(connection.getInputStream()));
         outS =  new PrintWriter(connection.getOutputStream(), true);
         //Conect
