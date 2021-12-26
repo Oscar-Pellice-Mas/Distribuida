@@ -14,6 +14,7 @@ public class Client {
         PrintWriter outS      = null;
         BufferedReader inS    = null;
         int offset;
+        String buffer;
         //Leemos el archivo y parseamos
         TransactionList lista = new TransactionList(args[0]);
         //Parseo finalizado. Hora de enviar
@@ -24,9 +25,27 @@ public class Client {
         outS =  new PrintWriter(connection.getOutputStream(), true);
         //Conect
         outS.println("client-");
+        //Enviem les transaccions
         for (int i = 0; i < lista.getTransactions().size(); i++) {
-
+            //Primer la layer
+            outS.println(lista.getTransactions().get(i).getLayer());
+            //Els reads
+            for (int j = 0; j < lista.getTransactions().get(i).getReads().size();j++){
+                outS.println("r-"+lista.getTransactions().get(i).getReads().get(j));
+                buffer = inS.readLine();
+                System.out.println("El valor per a "+lista.getTransactions().get(i).getReads().get(j)+" es:" + buffer);
+            }
+            //Els writes
+            for (int j = 0; j < lista.getTransactions().get(i).getWrites().size();j++){
+                outS.println("w-"+lista.getTransactions().get(i).getWrites().get(j));
+                buffer = inS.readLine();
+                if (!buffer.equals("ack")) j--;
+                System.out.println("He fet: " + lista.getTransactions().get(i).getWrites().get(j));
+            }
+            //Enviem final de transacció
+                outS.println("transactionend");
         }
+        outS.println("end");
     }
 }
 
