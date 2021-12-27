@@ -12,6 +12,8 @@ import java.util.HashMap;
 public class Layer_1 extends GenericServer {
     //Server Information
     private  int                          myId;
+    //Data information
+    private Data                          database;
     //Layer 1 Server information
     private Socket                        coreSocket;
     private PrintWriter                   coreOutS;
@@ -27,8 +29,7 @@ public class Layer_1 extends GenericServer {
     private ArrayList<ObjectInputStream>  L2InOs;
 
 
-    //Data information
-    private Data      database;
+
 
     public Layer_1() {
         L2Sockets =  new ArrayList<Socket>();
@@ -82,6 +83,7 @@ public class Layer_1 extends GenericServer {
             try {
                 System.out.println(ANSI_GREEN+"Llegint data");
                 Data d = (Data) coreInOs.readObject();
+
                 System.out.println(ANSI_GREEN+"Ha arribat data");
                 synchronized (this){
                     database = d;
@@ -92,24 +94,65 @@ public class Layer_1 extends GenericServer {
         }
     }
 
+
+    private void listenReadsCoreLayer() {
+        String buffer;
+        while(true){
+            try {
+                buffer = coreInS.readLine();
+                if (buffer.split("-")[0].equals("r")){
+                    if(buffer.split("-")[1].equals("1")){
+                        int value = getValue(Integer.parseInt(buffer.split("-")[1]));
+                        coreOutS.println(value);
+                    }else{
+                        //(int)Math.floor(Math.random()*(max-min+1)+min)
+                        int randomInt = (int)Math.floor(Math.random()*(1-0+1)+0);
+                        L2OutS.get(randomInt).println(buffer);
+                        buffer = L2InS.get(randomInt).readLine();
+                        coreOutS.println(buffer);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
     private void mainFunction() {
+        //Una funció per escoltar els reads
+        new Thread(
+                this::listenReadsCoreLayer
+        ).start();
+        //Una funció per escoltar els reads
         new Thread(
                 this::listenCoreLayer
         ).start();
-        //TODO: Una funció principal que fagi la fumada de la repliació
+        //Una funció principal que fagi la repliació
         System.out.println(ANSI_GREEN+"Llençat el thread de listenCoreLayer!");
         while (true) {
             try {
                 sleep(10000);
                 synchronized (this){
+                    //ID==0 no hará esto porque para él L2OutOs es size 0, por lo que no entra en el bucle
                     for (int i = 0; i < L2OutOs.size(); i++) {
                         L2OutOs.get(i).writeObject(database);
+                        L2OutOs.get(i).reset();
                     }
                 }
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+
+    private int getValue(int position){
+        synchronized (this){
+            if (database.getDatabase().containsKey(position)){
+                int value = database.getDatabase().get(position);
+                return value;
+            }
+        }
+        return 0;
     }
 
 }
