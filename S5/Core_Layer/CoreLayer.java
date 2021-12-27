@@ -162,8 +162,8 @@ public class CoreLayer extends GenericServer {
                 if (updates >= 10 ){
                     updates   = 0;
                     if (myId != 1) {
-                        L1OutOs.writeObject(database);
                         L1OutOs.reset(); //Resetejem per a que envii el objecte modificat
+                        L1OutOs.writeObject(database.getDatabase());
                         System.out.println(ANSI_YELLOW+"Update sent to L1");
                     }
                     System.out.println(ANSI_BLUE+"10 updates!");
@@ -179,20 +179,37 @@ public class CoreLayer extends GenericServer {
         //TODO: Que se puedan hacer reads layers 2
         if (layer == 0){
             if (database.getDatabase().containsKey(position)){
-                database.getDatabase().get(position);
+                int value = database.getDatabase().get(position);
+                return value;
             }
         }else{
             try {
                 if (myId != 1){
-                L1OutS.println("r-"+position);
-                    int value = Integer.parseInt(L1InS.readLine());
-                    L1OutS.println("ack");
-                    return value;
+                    if (layer!=2){
+                        L1OutS.println("r-"+position);
+                        int value = Integer.parseInt(L1InS.readLine());
+                        L1OutS.println("ack");
+                        return value;
+                    }else{
+                        coreOutSClient.get(2).println("r-"+layer+"-"+position);
+                        int value = Integer.parseInt(coreInSClient.get(0).readLine());
+                        return value;
+                    }
                 }else{
-                    coreOutSClient.get(0).println("r-"+layer+"-"+position);
-                    int value = Integer.parseInt(coreInSClient.get(0).readLine());
-                    coreOutSClient.get(0).println("ack");
-                    return value;
+                    if (layer==2){
+                        coreOutSClient.get(2).println("r-"+layer+"-"+position);
+                        int value = Integer.parseInt(coreInSClient.get(0).readLine());
+                        return value;
+                    }else if (layer==1) {
+                        //(int)Math.floor(Math.random()*(max-min+1)+min)
+                        int randomInt;
+                        do{
+                            randomInt = (int)Math.floor(Math.random()*(2-0+1)+0);
+                        }while (randomInt == 1);
+                        coreOutSClient.get(randomInt).println("r-" + layer + "-" + position);
+                        int value = Integer.parseInt(coreInSClient.get(0).readLine());
+                        return value;
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
