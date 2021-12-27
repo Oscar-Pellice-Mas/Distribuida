@@ -2,10 +2,12 @@ package S5.Core_Layer;
 
 import S5.Utils.Data;
 import S5.Utils.GenericServer;
+import S5.Utils.Util;
 
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class CoreLayer extends GenericServer {
     //Server Information
@@ -57,6 +59,7 @@ public class CoreLayer extends GenericServer {
                 synchronized (this){
                     updates++;// Incrementem les updates
                 }
+                Util.writeUpdate("coreLayer-"+myId);
             }else{
                 int value = getValue(Integer.parseInt(buffer.split("-")[1]),Integer.parseInt(buffer.split("-")[2]));
                 coreOutS.get(i).println(value);
@@ -154,19 +157,32 @@ public class CoreLayer extends GenericServer {
         connectToServer();
         mainFunction();
     }
+    private void sendDB() throws IOException {
+        String buffer;
+        for (Map.Entry<Integer, Integer> set :
+                database.getDatabase().entrySet()) {
+            L1OutS.println("u-" + set.getKey() + "-" + set.getValue());
+            do {buffer = L1InS.readLine();} while (!buffer.equals("ack"));
+        }
+        L1OutS.println("d-" + myId);
+        //Util.writeUpdate("coreLayer-"+myId); //Creo que no se ha de hacer aquí
+    }
 
     private void mainFunction() throws InterruptedException, IOException {
         //TODO: Una funció principal que fagi la fumada de la repliació
         while (true){
             synchronized (this){
                 if (updates >= 10 ){
+                    System.out.println(ANSI_BLUE+"10 updates!");
                     updates   = 0;
                     if (myId != 1) {
-                        L1OutOs.reset(); //Resetejem per a que envii el objecte modificat
-                        L1OutOs.writeObject(database.getDatabase());
+                        //FIXME: OLD
+                        //L1OutOs.reset(); //Resetejem per a que envii el objecte modificat
+                        //L1OutOs.writeObject(database.getDatabase());
+                        //FIXME: NEW
+                        sendDB();
                         System.out.println(ANSI_YELLOW+"Update sent to L1");
                     }
-                    System.out.println(ANSI_BLUE+"10 updates!");
                 }
 
                 //System.out.println(ANSI_GREEN+"Num of updates: " + updates);
@@ -270,6 +286,7 @@ public class CoreLayer extends GenericServer {
                             synchronized (this){
                                 updates++;// Incrementem les updates
                             }
+                            Util.writeUpdate("coreLayer-"+myId);
                         }
                     }
 

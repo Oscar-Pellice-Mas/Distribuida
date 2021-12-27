@@ -4,6 +4,7 @@ package S5.Layer_2;
 import S5.Layer_1.Layer_1;
 import S5.Utils.Data;
 import S5.Utils.GenericServer;
+import S5.Utils.Util;
 
 import java.io.*;
 import java.net.Socket;
@@ -64,7 +65,8 @@ public class Layer_2 extends GenericServer {
 
     private void mainFunction() {
         String buffer;
-        new Thread(this::listenL1Layer).start();
+        //FIXME: OLD
+        //new Thread(this::listenL1Layer).start();
         while(true){
             try {
                 buffer = L1InS.readLine();
@@ -72,6 +74,14 @@ public class Layer_2 extends GenericServer {
                     //R-L-ID
                     int value = getValue(Integer.parseInt(buffer.split("-")[2]));
                     L1OutS.println(value);
+                }else if (buffer.split("-")[0].equals("u")){
+                    replaceValue(Integer.parseInt(buffer.split("-")[1]),
+                            Integer.parseInt(buffer.split("-")[2]));
+                    L1OutS.println("ack");
+                }else if(buffer.split("-")[0].equals("d")){
+                    //TODO: Escriure la update al arxiu
+                    Util.writeUpdate("Layer2-"+myId);
+                    System.out.println("Update finalitzada");
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -86,6 +96,13 @@ public class Layer_2 extends GenericServer {
             }
         }
         return 0;
+    }
+    private void replaceValue(int position, int value){
+        if (database.getDatabase().containsKey(position)){
+            database.getDatabase().replace(position,value);
+        }else{
+            database.getDatabase().put(position,value);
+        }
     }
 }
 
