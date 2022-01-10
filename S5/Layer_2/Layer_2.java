@@ -1,6 +1,7 @@
 package S5.Layer_2;
 
 
+import S5.Core_Layer.CoreLayer;
 import S5.Layer_1.Layer_1;
 import S5.Utils.Data;
 import S5.Utils.GenericServer;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 public class Layer_2 extends GenericServer {
     //Server Information
     private  int                          myId;
+    public   static Layer_2               instance;
     //Data information
     private Data                          database;
     //Layer 1 Server information
@@ -21,6 +23,17 @@ public class Layer_2 extends GenericServer {
     private BufferedReader L1InS;
     private ObjectOutputStream L1OutOs;
     private ObjectInputStream L1InOs;
+
+    public static Layer_2 getLayer_2(){
+        if (instance == null){
+            instance = new Layer_2();
+        }
+        return instance;
+    }
+
+    public Data getDatabase() {
+        return database;
+    }
 
     public Layer_2() {
         database  =  new Data();
@@ -43,7 +56,7 @@ public class Layer_2 extends GenericServer {
     }
     public void work(int id) {
         myId=id;
-        CreateServer(PORT_L2+myId);
+        CreateServer(PORT_L2+myId,5+myId);
         getL1Layer();
         mainFunction();
     }
@@ -72,7 +85,7 @@ public class Layer_2 extends GenericServer {
                 buffer = L1InS.readLine();
                 if (buffer.split("-")[0].equals("r")){
                     //R-L-ID
-                    int value = getValue(Integer.parseInt(buffer.split("-")[2]));
+                    int value = getValue(Integer.parseInt(buffer.split("-")[1]));
                     L1OutS.println(value);
                 }else if (buffer.split("-")[0].equals("u")){
                     replaceValue(Integer.parseInt(buffer.split("-")[1]),
@@ -109,7 +122,7 @@ public class Layer_2 extends GenericServer {
 
 class mainLayer2 {
     public static void main(String[] args) {
-        Layer_2 core = new Layer_2();
+        Layer_2 core = Layer_2.getLayer_2();
 
         core.work(Integer.parseInt(args[0]));
     }

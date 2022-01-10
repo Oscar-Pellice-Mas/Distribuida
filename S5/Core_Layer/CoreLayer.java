@@ -13,6 +13,7 @@ public class CoreLayer extends GenericServer {
     //Server Information
     private  int                         myId;
     private  int                         updates;
+    public   static CoreLayer             instance;
     //Data information
     private Data                         database;
     //Client information
@@ -35,6 +36,16 @@ public class CoreLayer extends GenericServer {
     private  ObjectOutputStream          L1OutOs;
     private  ObjectInputStream           L1InOs;
 
+    public Data getDatabase() {
+        return database;
+    }
+
+    public static CoreLayer getcoreLayer(){
+        if (instance == null){
+            instance = new CoreLayer();
+        }
+        return instance;
+    }
 
     public CoreLayer() {
         clientSocketList  = new ArrayList<Socket>();
@@ -49,7 +60,7 @@ public class CoreLayer extends GenericServer {
         coreInSClient     = new ArrayList<BufferedReader>();
         database          = new Data();
     }
-    void coreLayerConnection(int i) throws IOException {
+    void    coreLayerConnection(int i) throws IOException {
         while (true) {
             String buffer = coreInS.get(i).readLine();
             if (buffer.charAt(0)=='w'){
@@ -148,7 +159,7 @@ public class CoreLayer extends GenericServer {
     public void work(int id) throws InterruptedException, IOException {
         myId = id;
         //Obrim el servidor
-        CreateServer(PORT_CORE+myId);
+        CreateServer(PORT_CORE+myId,myId);
         //Obrim un thread per escoltar els clients que entrin
         new Thread(
                 this::serverFunction
@@ -201,20 +212,20 @@ public class CoreLayer extends GenericServer {
         }else{
             try {
                 if (myId != 1){
-                    if (layer!=2){
+                    if ((layer!=2)||(myId==0)){
                         L1OutS.println("r-"+position);
                         int value = Integer.parseInt(L1InS.readLine());
                         L1OutS.println("ack");
                         return value;
                     }else{
-                        coreOutSClient.get(2).println("r-"+layer+"-"+position);
-                        int value = Integer.parseInt(coreInSClient.get(0).readLine());
+                        coreOutSClient.get(1).println("r-"+layer+"-"+position);
+                        int value = Integer.parseInt(coreInSClient.get(1).readLine());
                         return value;
                     }
                 }else{
                     if (layer==2){
-                        coreOutSClient.get(2).println("r-"+layer+"-"+position);
-                        int value = Integer.parseInt(coreInSClient.get(0).readLine());
+                        coreOutSClient.get(1).println("r-"+layer+"-"+position);
+                        int value = Integer.parseInt(coreInSClient.get(1).readLine());
                         return value;
                     }else if (layer==1) {
                         //(int)Math.floor(Math.random()*(max-min+1)+min)
@@ -302,7 +313,7 @@ public class CoreLayer extends GenericServer {
 
 class mainCore {
     public static void main(String[] args) {
-        CoreLayer core = new CoreLayer();
+        CoreLayer core = CoreLayer.getcoreLayer();
 
         try {
             core.work(Integer.parseInt(args[0]));

@@ -14,6 +14,7 @@ import java.util.Map;
 public class Layer_1 extends GenericServer {
     //Server Information
     private  int                          myId;
+    public   static Layer_1               instance;
     //Data information
     private Data                          database;
     //Layer 1 Server information
@@ -31,7 +32,16 @@ public class Layer_1 extends GenericServer {
     private ArrayList<ObjectInputStream>  L2InOs;
 
 
+    public static Layer_1 getLayer_1(){
+        if (instance == null){
+            instance = new Layer_1();
+        }
+        return instance;
+    }
 
+    public Data getDatabase() {
+        return database;
+    }
 
     public Layer_1() {
         L2Sockets =  new ArrayList<Socket>();
@@ -74,7 +84,7 @@ public class Layer_1 extends GenericServer {
 
     public void work(int id){
         myId=id;
-        CreateServer(PORT_L1+id);
+        CreateServer(PORT_L1+id,3+myId);
         getCoreLayer();
         if (id == 1) connectToLayer2();
         mainFunction();
@@ -96,8 +106,6 @@ public class Layer_1 extends GenericServer {
             }
         }
     }
-
-
     private void listenReadsCoreLayer() {
         String buffer;
         while(true){
@@ -187,7 +195,7 @@ public class Layer_1 extends GenericServer {
 
 class mainLayer1 {
     public static void main(String[] args) {
-        Layer_1 core = new Layer_1();
+        Layer_1 core = Layer_1.getLayer_1();
 
         core.work(Integer.parseInt(args[0]));
     }

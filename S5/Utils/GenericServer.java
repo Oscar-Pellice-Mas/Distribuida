@@ -6,6 +6,17 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import S5.Utils.WebSockets.EndPoint;
+import S5.Utils.WebSockets.EndPointLayer1;
+import S5.Utils.WebSockets.EndPointLayer2;
+import S5.Utils.WebSockets.clientEnd;
+import org.glassfish.tyrus.client.ClientManager;
+import org.glassfish.tyrus.server.Server;
+
+import javax.websocket.DeploymentException;
 
 public class GenericServer extends Thread{
     /**IP I PORTS**/
@@ -30,12 +41,26 @@ public class GenericServer extends Thread{
     protected Socket serverAccepter = null;
     protected PrintWriter outS      = null;
     protected BufferedReader inS    = null;
+    //Camps del WebSocket
+    Server websocket;
 
-    protected void CreateServer(int port){
+    protected void CreateServer(int port,int wsOffset){
         try {
-            // Connect to HW
+            // Create SErver TCP
             serverSocket = new ServerSocket(port);
-        } catch (IOException e) {
+            //Create WebSocket
+            /** wsOffset
+             *  CORE: 0,1,2
+             *  LAYER_1: 3,4
+             *  LAYER_2: 5,6
+              */
+            websocket = new Server ("localhost", 8050+wsOffset, "/S5",
+                    (wsOffset<=2) ? EndPoint.class :
+                            ((wsOffset<=4)&&(wsOffset>=3))? EndPointLayer1.class :
+                                    EndPointLayer2.class);
+            websocket.start();
+
+        } catch (IOException | DeploymentException e) {
             System.err.println("Port occupied. Leaving program");
             System.exit(0);
         }
