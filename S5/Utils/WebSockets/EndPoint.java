@@ -21,7 +21,6 @@ public class EndPoint {
         String buffer="";
         for (Map.Entry<Integer, Integer> set :
                 core.getDatabase().getDatabase().entrySet()) {
-            //TODO: Hacer un string para enviar
             buffer = buffer.concat(set.getKey() + "-" + set.getValue() + "<br>");
         }
         System.out.println("New Text Message Received");

@@ -21,7 +21,6 @@ public class EndPointLayer1 {
         String buffer="";
         for (Map.Entry<Integer, Integer> set :
                 l1.getDatabase().getDatabase().entrySet()) {
-            //TODO: Hacer un string para enviar
             buffer = buffer.concat(set.getKey() + "-" + set.getValue() + "<br>");
         }
         return buffer;

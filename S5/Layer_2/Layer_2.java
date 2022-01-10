@@ -78,8 +78,6 @@ public class Layer_2 extends GenericServer {
 
     private void mainFunction() {
         String buffer;
-        //FIXME: OLD
-        //new Thread(this::listenL1Layer).start();
         while(true){
             try {
                 buffer = L1InS.readLine();
@@ -92,7 +90,6 @@ public class Layer_2 extends GenericServer {
                             Integer.parseInt(buffer.split("-")[2]));
                     L1OutS.println("ack");
                 }else if(buffer.split("-")[0].equals("d")){
-                    //TODO: Escriure la update al arxiu
                     Util.writeUpdate("Layer2-"+myId);
                     System.out.println("Update finalitzada");
                 }

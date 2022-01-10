@@ -180,23 +180,16 @@ public class CoreLayer extends GenericServer {
     }
 
     private void mainFunction() throws InterruptedException, IOException {
-        //TODO: Una funció principal que fagi la fumada de la repliació
         while (true){
             synchronized (this){
                 if (updates >= 10 ){
                     System.out.println(ANSI_BLUE+"10 updates!");
                     updates   = 0;
                     if (myId != 1) {
-                        //FIXME: OLD
-                        //L1OutOs.reset(); //Resetejem per a que envii el objecte modificat
-                        //L1OutOs.writeObject(database.getDatabase());
-                        //FIXME: NEW
                         sendDB();
                         System.out.println(ANSI_YELLOW+"Update sent to L1");
                     }
                 }
-
-                //System.out.println(ANSI_GREEN+"Num of updates: " + updates);
             }
             sleep(4000);
         }

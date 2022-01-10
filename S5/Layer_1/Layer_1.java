@@ -90,7 +90,7 @@ public class Layer_1 extends GenericServer {
         mainFunction();
     }
 
-    //FIXME: OLD
+    //OLD
     private void listenCoreLayer() {
         while (true){
             try {
@@ -127,7 +127,6 @@ public class Layer_1 extends GenericServer {
                             Integer.parseInt(buffer.split("-")[2]));
                     coreOutS.println("ack");
                 }else if(buffer.split("-")[0].equals("d")){
-                    //TODO: Escriure la update al arxiu
                     Util.writeUpdate("Layer1-"+myId);
                     System.out.println("Update finalitzada");
                 }
@@ -148,9 +147,6 @@ public class Layer_1 extends GenericServer {
     private void mainFunction() {
         //Una funció per escoltar els reads
         new Thread(this::listenReadsCoreLayer).start();
-        //FIXME: OLD
-        //Una funció per escoltar els updates
-        //new Thread(this::listenCoreLayer).start();
 
         //Una funció principal que fagi la repliació
         System.out.println(ANSI_GREEN+"Llençat el thread de listenCoreLayer!");
@@ -160,9 +156,6 @@ public class Layer_1 extends GenericServer {
                 synchronized (this){
                     //ID==0 no hará esto porque para él L2OutOs es size 0, por lo que no entra en el bucle
                     for (int i = 0; i < L2OutOs.size(); i++) {
-                        //FIXME: OLD
-                        //L2OutOs.get(i).writeObject(database);
-                        //L2OutOs.get(i).reset();
                         sendDB(i);
                         System.out.println("DB enviada");
                     }
