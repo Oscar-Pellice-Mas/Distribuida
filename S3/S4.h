@@ -13,7 +13,8 @@
 #include <sys/types.h>
 #include <string.h>
 #include <rpc/rpc.h>
-
+#include <ncurses.h>
+#include <pthread.h>
 
 #ifdef __cplusplus
 extern "C" {
