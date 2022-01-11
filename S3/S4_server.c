@@ -5,88 +5,71 @@
  */
 
 #include "S4.h"
+#include <ncurses.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <strings.h>
+#include <pthread.h>
 
 #define FILE_ERROR "Error en obrir el fitxer"
 
-char* readUntil(int fd, char cFi) {
-    int i = 0;
-    char c = '0';
-    char* buffer = (char*)malloc(sizeof(char));
-		int bytes;
+char* read_until(int fd, char end) {
+	int i = 0, size;
+	char c = '\0';
+	char* string = (char*)malloc(sizeof(char));
 
-    while (c != cFi) {
-        bytes= read(fd, &c, sizeof(char));
-				if (bytes==0) {
-					buffer[i] = '\0';
-					return buffer;
-				}
-        if (c != cFi) {
-            buffer[i] = c;
-            buffer = (char*)realloc(buffer, sizeof(char) * (i + 2));
-        }
-        i++;
-    }
-    buffer[i - 1] = '\0';
-    return buffer;
-}
-
-void readFile(int fd, ChatLog * log){
-	int i=0;
-
-	//Reservem espai
-	log->chat = malloc(sizeof(Message));
-	//Llegim l'arxiu
 	while (1) {
-		log->chat[i].origin = readUntil(fd,'*');
-		log->chat[i].text = readUntil(fd,'\n');
-		//Comprovem si fi d'arxiu
-		if (strlen(log->chat[i].origin)<=1) {
-			//Guarden el num de missatges
-			log->num_messages = i;
+		size = read(fd, &c, sizeof(char));
+		if (c != end && size > 0) {
+			string = (char*)realloc(string, sizeof(char) * (i + 2));
+			string[i++] = c;
+		} else {
 			break;
-		}else{
-			//Si no hem acabat, guardem i reservem memoria
-			(*log).chat = realloc((Message*)log->chat, sizeof(Message)*(i+2));
-			i++;
 		}
 	}
+
+	string[i] = '\0';
+	return string;
 }
 
-void writeFile_line(int fd,char * newMSG){
-	write(fd, newMSG, strlen(newMSG));
-}
-
-ChatLog *
-getchat_1_svc(void *argp, struct svc_req *rqstp)
-{
-	static ChatLog  result;
-	int fd;
-	//Obrim l'arxiu de log
-	fd = open ("chat.txt", O_RDONLY|O_CREAT);
-	if (fd<0){
-	write(1,FILE_ERROR,sizeof(FILE_ERROR));
-	return &result;
-	}
-
-	readFile(fd, &result);
-
-	return &result;
-}
-
-/*Formato de cadenas a enviar: Como en el txt (<origen>*<texto>)*/
-void *
-write_1_svc(char **argp, struct svc_req *rqstp)
-{
+char ** getchat_1_svc(void *argp, struct svc_req *rqstp) {
 	static char * result;
-	ChatLog  buffer;
-	fd = open ("chat.txt", O_RDWR|O_CREAT, 0666);
-	if (fd<0){
-		printf("Error en obrir el fitxer");
-		return;
+	int flag = 0;
+	int fd = open("chat.txt", O_RDONLY);
+
+	while (1) {
+		char *readTxt = read_until(fd, '\n');
+		if (readTxt[0] == '\0') break;
+		if(flag == 0) {
+			result = (char*)malloc(sizeof(char) * (strlen(readTxt) + 1));
+			strcpy(result, readTxt);
+			flag++;
+		} else {
+			result = (char*)realloc(result, sizeof(char) * (strlen(result) + strlen(readTxt) + 2));
+			strcat(result, readTxt);
+		}
+		strcat(result, "\n");
 	}
-	// ESCRIURE AL FITXER LA VARIABLE DE ARGP
-	readFile(fd, &buffer);
-	writeFile_line(fd,*argp);
+
+	return &result;
+}
+
+void * writemsg_1_svc(char **argp, struct svc_req *rqstp) {
+	static char * result;
+
+	int	fd = open ("chat.txt", O_APPEND | O_WRONLY);
+	if (fd < 0) {
+      printf(FILE_ERROR);
+	    return NULL;
+	}
+
+	write(fd, argp[0], strlen(argp[0]));
+	write(fd, "\n", 1);
+
 	close(fd);
+
 	return (void *) &result;
 }

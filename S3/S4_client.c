@@ -5,143 +5,141 @@
  */
 
 #include "S4.h"
+#include <ncurses.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <strings.h>
+#include <pthread.h>
 
-WINDOW *winInput, *winChat;
+WINDOW *ChatWindow, *LogWindow;
 
-void *refreshChat(){
-  CLIENT *clnt;
-	char *getchat_1_arg;
+char* read_until(int fd, char end) {
+    int i = 0, size;
+    char c = '\0';
+    char* string = (char*)malloc(sizeof(char));
 
-  // Loop infinit cada segon
-  while(1){
-    #ifndef	DEBUG
-    	clnt = clnt_create ("localhost", PROGRAM, VERSION, "udp");
-    	if (clnt == NULL) {
-    		clnt_pcreateerror ("localhost");
-    		exit (1);
-    	}
-    #endif	/* DEBUG */
-
-    // Demanem el chat en el rpc
-    result = getchat_1((void*)&getchat_1_arg, clnt);
-  	if (result == (char **) NULL) {
-  		clnt_perror (clnt, "call failed");
-  	}
-
-    #ifndef	DEBUG
-    	clnt_destroy (clnt);
-    #endif	 /* DEBUG */
-
-
-    // Netejem finestra
-  	wclear(winChat);
-    // Afegim \n al final TODO: substituir per \n al sistema
-  	char *temp = (char *)malloc(sizeof(char)*strlen(result[0]) + 2);
-  	sprintf(temp, "%s\n", result[0]);
-    // Escrivim el chat
-  	wprintw(winChat, temp);
-  	wscrl(winChat, 1);//?
-    // Refresh de la finestra
-  	wrefresh(winChat);
-
-    // Esperem un segon
-  	sleep(1);
-  }
-  return NULL;
+    while (1) {
+        size = read(fd, &c, sizeof(char));
+        if (c != end && size > 0) {
+            string = (char*)realloc(string, sizeof(char) * (i + 2));
+            string[i++] = c;
+        } else {
+            break;
+        }
+    }
+    string[i] = '\0';
+    return string;
 }
 
-void sortida(int signum){
-  // Tanquem les finestres de ncurses
-	delwin(winInput);
-	delwin(winChat);
-  // Tanquem ncurses
+void endSignal(int signum) {
+	// End ncurses
+	delwin(ChatWindow);
+	delwin(LogWindow);
 	endwin();
-  // Acabem el programa.
+	// End program
 	exit(0);
 }
 
-void program_1(char *host){
-  CLIENT *clnt;
-	void  *result_1;
-	char * write_1_arg;
+void *updateThread(void *arg) {
+	CLIENT *clnt;
+	char *getmessage_1_arg;
+	char **result;
 
-	showmessage_1_arg = (char *) malloc(sizeof(char)*100);
-	bzero(showmessage_1_arg, 100);
+	while(1){
+		#ifndef	DEBUG
+			clnt = clnt_create ("localhost", PROGRAM, VERSION, "udp");
+			if (clnt == NULL) {
+				clnt_pcreateerror ("localhost");
+				exit (1);
+			}
+		#endif	/* DEBUG */
 
-	wclear(winInput);
-	wrefresh(winInput);
+		result = getchat_1((void*)&getmessage_1_arg, clnt);
+		if (result == (char **) NULL) {
+			clnt_perror (clnt, "call failed");
+		}
 
-	wprintw(winInput, "Missatge: ");
-	wrefresh(winInput);
+		#ifndef	DEBUG
+			clnt_destroy (clnt);
+		#endif	 /* DEBUG */
 
-	wgetstr(winInput, write_1_arg);
-	wrefresh(winInput);
+		wclear(LogWindow);
+		char *temp = (char *)malloc(sizeof(char)*strlen(result[0]) + 2);
+		sprintf(temp, "%s\n", result[0]);
+		wprintw(LogWindow, temp);
+		wscrl(LogWindow, 1);
+		wrefresh(LogWindow);
 
-	char * envia = (char *) malloc(sizeof(char)*150);
-	bzero(envia, 150);
-
-	sprintf(envia, "%s: %s", clientUser, write_1_arg);
-
-  #ifndef	DEBUG
-  	clnt = clnt_create ("localhost", PROGRAM, ZERO, "udp");
-  	if (clnt == NULL) {
-  		clnt_pcreateerror (host);
-  		exit (1);
-  	}
-  #endif	/* DEBUG */
-
-	result_1 = write_1(&envia, clnt);
-	if (result_1 == (void *) NULL) {
-		clnt_perror (clnt, "call failed");
+		// Espera de 1 segon
+		sleep(1);
 	}
+	return NULL;
+}
 
-  #ifndef	DEBUG
-  	clnt_destroy (clnt);
-  #endif	 /* DEBUG */
+void program_1(char *host) {
+	CLIENT *clnt;
+	char * *result_1;
+	char *writeMsg_1_arg;
 
-	// EXEMPLES
-	/*result_1 = getchat_1((void*)&getchat_1_arg, clnt);
+	writeMsg_1_arg = (char *) malloc(sizeof(char)*150);
+	bzero(writeMsg_1_arg, 150);
+	wclear(ChatWindow);
+	wrefresh(ChatWindow);
+	wprintw(ChatWindow, "Missatge: ");
+	wrefresh(ChatWindow);
+	wgetstr(ChatWindow, writeMsg_1_arg);
+	wrefresh(ChatWindow);
+	char * auxiliar = (char *) malloc(sizeof(char)*200);
+	bzero(auxiliar, 200);
+	sprintf(auxiliar, "-> %s: %s", host, writeMsg_1_arg);
+
+	#ifndef	DEBUG
+		clnt = clnt_create ("localhost", PROGRAM, VERSION, "udp");
+		if (clnt == NULL) {
+			clnt_pcreateerror ("localhost");
+			exit (1);
+		}
+	#endif	/* DEBUG */
+
+	result_1 = writemsg_1(&auxiliar, clnt);
 	if (result_1 == (char **) NULL) {
 		clnt_perror (clnt, "call failed");
 	}
-	result_2 = write_1(&write_1_arg, clnt);
-	if (result_2 == (void *) NULL) {
-		clnt_perror (clnt, "call failed");
-	}*/
+
+	#ifndef	DEBUG
+		clnt_destroy (clnt);
+	#endif	 /* DEBUG */
 }
 
-int main (int argc, char *argv[]){
+int main (int argc, char *argv[]) {
 	char *host;
-  host = argv[1];
+	pthread_t thread;
 
 	if (argc < 2) {
 		printf ("usage: %s server_host\n", argv[0]);
 		exit (1);
 	}
-  // --- SIGNALS ---
-  // Reprogramem el signal de SIGINT per tancar el programa
-	signal(SIGINT, sortida);
+	host = argv[1];
 
+	// Signal init
+	signal(SIGINT, endSignal);
 
-  // --- NCURSES INIT ---
-  // Inicialitzem el sistema de ncurses amb dues finestres
-  initscr();
-  // Finestra per escriure al chat.
-  winInput = newwin(10, 40, 16, 0);
-  // Finestra per mostrar el chat.
-  winChat = newwin(15, 40, 0, 0);
-  // Necesari per
-  scrollok(winChat, TRUE);
+	// Ncurses init
+	initscr();
+	LogWindow = newwin(20, 50, 0, 0);
+	ChatWindow = newwin(5, 50, 21, 0);
+	scrollok(LogWindow, TRUE);
 
-  // --- MAIN FUNCTIONS ---
-  // Inicialitzem un thread per lectura del chat del sistema.
-  pthread_t thread;
-  pthread_create(&thread, NULL, getChatThread, NULL);
+	// Thread init
+	pthread_create(&thread, NULL, updateThread, NULL);
 
-  // Loop infinit de lectura del teclat
-  while(1) {
-    program_1(host);
-  }
+	// Main program init
+	while (1) {
+		program_1 (host);
+	}
 
-  exit (0);
+	exit (0);
 }

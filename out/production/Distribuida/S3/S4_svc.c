@@ -20,7 +20,7 @@ static void
 program_1(struct svc_req *rqstp, register SVCXPRT *transp)
 {
 	union {
-		char *writemsg_1_arg;
+		char *write_1_arg;
 	} argument;
 	char *result;
 	xdrproc_t _xdr_argument, _xdr_result;
@@ -33,14 +33,14 @@ program_1(struct svc_req *rqstp, register SVCXPRT *transp)
 
 	case getChat:
 		_xdr_argument = (xdrproc_t) xdr_void;
-		_xdr_result = (xdrproc_t) xdr_wrapstring;
+		_xdr_result = (xdrproc_t) xdr_ChatLog;
 		local = (char *(*)(char *, struct svc_req *)) getchat_1_svc;
 		break;
 
-	case writeMsg:
+	case write:
 		_xdr_argument = (xdrproc_t) xdr_wrapstring;
 		_xdr_result = (xdrproc_t) xdr_void;
-		local = (char *(*)(char *, struct svc_req *)) writemsg_1_svc;
+		local = (char *(*)(char *, struct svc_req *)) write_1_svc;
 		break;
 
 	default:
